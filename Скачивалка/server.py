@@ -34,6 +34,78 @@ TMP = os.path.join(HERE, "tmp")
 OUT = os.path.expanduser("~/Downloads")
 ENV = dict(os.environ, LANG="en_US.UTF-8", PYTHONIOENCODING="utf-8")
 jobs, jlock = {}, threading.Lock()
+
+
+# --- the folder for the results: asked on the first start, changed with ⚙ (kept in settings.json next to the program) ---
+SETTINGS = os.path.join(HERE, "settings.json")
+NAMES = {"Pictures": "Изображения", "Downloads": "Загрузки", "Desktop": "Рабочий стол", "Documents": "Документы",
+         "Movies": "Фильмы", "Videos": "Видео", "Music": "Музыка"}
+
+
+def settings():
+    try:
+        return json.load(open(SETTINGS, encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+
+
+def out_dir():
+    """The chosen folder; while none is chosen (or it is gone: deleted, a disk unplugged) — the usual one."""
+    p = settings().get("out")
+    return p if p and os.path.isdir(p) else OUT
+
+
+def folder_info():
+    p = out_dir()
+    home = os.path.expanduser("~")
+    if p == home or p.startswith(home + os.sep):
+        parts = [x for x in os.path.relpath(p, home).split(os.sep) if x not in ("", ".")]
+        pretty = " › ".join([NAMES.get(parts[0], parts[0])] + parts[1:]) if parts else "Домашняя папка"
+    else:
+        pretty = p
+    s = settings().get("out")
+    return {"path": p, "pretty": pretty, "asked": bool(s and os.path.isdir(s))}
+
+
+def set_folder(p):
+    os.makedirs(p, exist_ok=True)
+    s = settings()
+    s["out"] = p
+    with open(SETTINGS, "w", encoding="utf-8") as f:
+        json.dump(s, f, ensure_ascii=False)
+
+
+def pick_folder():
+    """The usual folder dialog of the system. Returns the folder or '' (cancelled)."""
+    start = out_dir() if os.path.isdir(out_dir()) else os.path.expanduser("~")
+    try:
+        import webview
+
+        if webview.windows:  # our own window: its dialog
+            r = webview.windows[0].create_file_dialog(webview.FileDialog.FOLDER, directory=start)
+            return (r[0] if isinstance(r, (list, tuple)) else r or "") if r else ""
+    except Exception as e:  # noqa: BLE001
+        print("folder dialog:", e, flush=True)
+    if WIN:  # opened in the browser: the dialog through PowerShell
+        ps = ("Add-Type -AssemblyName System.Windows.Forms;$d=New-Object System.Windows.Forms.FolderBrowserDialog;"
+              f"$d.SelectedPath='{start}';if($d.ShowDialog() -eq 'OK'){{[Console]::OutputEncoding=[Text.Encoding]::UTF8;$d.SelectedPath}}")
+        r = subprocess.run(["powershell", "-NoProfile", "-STA", "-Command", ps], capture_output=True, text=True, encoding="utf-8", **NOWIN)
+    else:
+        r = subprocess.run(["osascript", "-e", f'POSIX path of (choose folder with prompt "Куда сохранять готовое?" default location (POSIX file "{start}"))'],
+                           capture_output=True, text=True)
+    return r.stdout.strip().rstrip("/\\") if r.returncode == 0 else ""
+
+
+def folder_route(path):
+    """/folder — what is chosen; /folder/pick — choose another; /folder/keep — keep the one shown."""
+    if path == "/folder/pick":
+        p = pick_folder()
+        if p:
+            set_folder(p)
+    elif path == "/folder/keep":
+        set_folder(out_dir())
+    return json.dumps(folder_info(), ensure_ascii=False).encode()
+
 ready = threading.Event()  # cleared while yt-dlp is being replaced: downloads wait for it
 ready.set()
 
@@ -172,10 +244,44 @@ def nice(err):
     return "Не получилось скачать. Попробуй ещё раз или нажми «Обновить»"
 
 
+def est_sizes(i):
+    """Rough file size for each choice (same order of picking as the download: size, fps, H.264 first, https first)."""
+    d = i.get("duration") or 0
+    fs = i.get("formats") or []
+    def size(f):
+        b = f.get("filesize") or f.get("filesize_approx")
+        if not b and f.get("tbr") and d:
+            b = f["tbr"] * 1000 / 8 * d
+        return b or 0
+    def crank(c):
+        c = (c or "").lower()
+        return 0 if c.startswith(("avc", "h264")) else 1 if c.startswith(("hev", "hvc", "h265")) else 2 if c.startswith("vp") else 3
+    vids = [f for f in fs if f.get("vcodec") not in (None, "none") and f.get("width") and f.get("height")]
+    auds = [f for f in fs if f.get("acodec") not in (None, "none") and f.get("vcodec") in (None, "none")]
+    a = max(auds, key=lambda f: (str(f.get("acodec", "")).startswith("mp4a"), f.get("protocol") == "https", f.get("abr") or 0), default=None)
+    ab = size(a) if a else 0
+    out = {}
+    for q in (0, 4320, 2160, 1440, 1080, 720, 480, 360, 240):
+        c = [f for f in vids if not q or min(f["width"], f["height"]) <= q * 1.1] or vids
+        if not c:
+            continue
+        v = max(c, key=lambda f: (min(f["width"], f["height"]), f.get("fps") or 0, -crank(f.get("vcodec")),
+                                  f.get("protocol") == "https", size(f)))
+        b = size(v) + (ab if v.get("acodec") in (None, "none") else 0)
+        if b:
+            out[str(q)] = int(b)
+    if d:
+        out["wav"] = int(d * 44100 * 4)
+        out["mp3"] = int(d * 40000)
+    return out
+
+
 def run_job(j):
-    a = base_args() + ["-P", OUT, "-P", "temp:" + TMP, "--progress",
+    a = base_args() + ["-P", out_dir(), "-P", "temp:" + TMP, "--progress",
                        "--progress-template", "download:PROG %(progress._percent_str)s|%(progress._speed_str)s|%(progress._eta_str)s",
-                       "--print", "before_dl:TITLE %(title)s", "--print", "after_move:FILE %(filepath)s"]
+                       "--print", "before_dl:TITLE %(title)s", "--print", "after_move:FILE %(filepath)s",
+                       # YouTube sometimes chokes one connection to a few KB/s — then yt-dlp reconnects by itself
+                       "--throttled-rate", "100K"]
     name = "%(title).150B"
     if j["start"] is not None or j["end"] is not None:
         s, e = j["start"] or 0, j["end"]
@@ -389,9 +495,12 @@ class H(BaseHTTPRequestHandler):
                 hs = sorted({min(f["width"], f["height"]) for f in i.get("formats") or []
                              if f.get("vcodec") not in (None, "none") and f.get("width") and f.get("height")}, reverse=True)
                 return self.send({"title": i.get("title") or "", "duration": i.get("duration"), "thumb": i.get("thumbnail") or "",
-                                  "channel": i.get("channel") or i.get("uploader") or "", "heights": hs})
+                                  "channel": i.get("channel") or i.get("uploader") or "", "heights": hs,
+                                  "sizes": est_sizes(i)})
             except subprocess.TimeoutExpired:
                 return self.send({"error": "YouTube долго не отвечает. Попробуй ещё раз"})
+        if u.path.startswith("/folder"):
+            return self.send(json.loads(folder_route(u.path)))
         if u.path == "/busy":  # the automatic yt-dlp update is going on
             return self.send({"on": auto["on"]})
         if u.path == "/appver":
@@ -421,11 +530,11 @@ class H(BaseHTTPRequestHandler):
             jobs.pop(q.get("id", ""), None)
             return self.send({})
         if u.path == "/open":
-            reveal(OUT)
+            reveal(out_dir())
             return self.send({})
         if u.path == "/show":  # one file, selected in Finder / Explorer (only from Downloads)
             p = os.path.realpath(q.get("path", ""))
-            if p.startswith(os.path.realpath(OUT) + os.sep) and os.path.exists(p):
+            if p.startswith(os.path.realpath(out_dir()) + os.sep) and os.path.exists(p):
                 reveal(p, select=True)
             return self.send({})
         if u.path == "/site":  # "by RSTP Studio" was clicked: the site in the usual browser

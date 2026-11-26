@@ -1,7 +1,7 @@
 {
  "version": "1.0.0",
- "tag": "v1.0.0",
- "notes": "Первая версия 1.0.0: видео из ВК (куски со звуком), загрузчик обновляется сам, версия в углу окна",
+ "tag": "v1.0.0-2",
+ "notes": "Новая Улучшалка (варианты, шторка/рядом), выбор папки, вес на кнопке Скачивалки",
  "pip": [
   {
    "import": "PIL",
@@ -25,16 +25,16 @@
   }
  ],
  "files": {
-  "Скачивалка/index.html": "6b5ae1a556dbfc1b5a90e41c903fcd40c1545f1137edc21fd95091b81ee5f76e",
-  "Скачивалка/server.py": "e08785cefc5ca0f992ed0ec1832a255a3663c667271ec6fde36adcb80c48c8e8",
+  "Скачивалка/index.html": "e2346c220d1d3d8aad6d439e18f494f26d8699813ec53ca2ebcdda2e4709c1e4",
+  "Скачивалка/server.py": "2e24367cfa7f3a6e18f031a6d80bdab88b3b2a5d4762bc643e9238ae5ef56bea",
   "Скачивалка/updater.py": "7225db6f27259a08f3a3583646d96d55dfb36ffab7186e968043906db3364a09",
   "Скачивалка/значок/icon-256.png": "c35a74433ba4625c948ac20be3cda188ea3dd4d2427789d339b59e25955def12",
   "Скачивалка/значок/icon.icns": "25224def0d425b5b373e9f7867042bff0c25b36d9ae6e390fddd5b877a582e99",
   "Скачивалка/значок/icon.ico": "560e1a96c86e2d8ed3244ce3c6288e4a58b193fff7633e46420065f75721431b",
   "Скачивалка/значок/rstp-logo-dark.png": "b9f8de5d4279c6effb0098f945d1377d72546b49c3f6f66495542527336a5b76",
   "Скачивалка/значок/rstp-logo.png": "d6bf2eb71843b06bd52787793a4380ef41a8659bae2dba79a674dae7cb7e7693",
-  "Улучшалка/index.html": "091217b267ea7e18bcb72ceb96c1fed893ca3c9f15b8940287148a188182b180",
-  "Улучшалка/server.py": "a823c82a98eb0b6724942ca1820c7ed09e4d3481d65b42c4a088ddcf889d509d",
+  "Улучшалка/index.html": "82f0102b37a3304307d03b80e8f29a6a7351b43eb3a02bbb15bc14a48aa7b0de",
+  "Улучшалка/server.py": "427ca5b700bf91c3a35a38b9bd712e57fafa35a034fb1fbf21a152a66e6b64d2",
   "Улучшалка/updater.py": "7225db6f27259a08f3a3583646d96d55dfb36ffab7186e968043906db3364a09",
   "Улучшалка/значок/icon-256.png": "446bcd4c6e4fcaa851538e199d7916d3722b9c24b4f6753f434cace13f8d314e",
   "Улучшалка/значок/icon.icns": "e6dcb0b9ec99649df508a693fc3e3fae464ce16754834bb3f3aa471d18de9d55",

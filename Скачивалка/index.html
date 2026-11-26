@@ -11,11 +11,13 @@
 html,body{min-height:100%}
 body{margin:0;background:radial-gradient(1100px 560px at 85% -12%,var(--glow) 0%,transparent 60%),var(--bg);background-attachment:fixed;color:var(--text);font:15px/1.45 -apple-system,system-ui,"Segoe UI",sans-serif;-webkit-user-select:none;user-select:none}
 button,input{font:inherit;color:inherit}
+#hint:empty{display:none}
 .page{max-width:1080px;margin:0 auto;padding:22px 20px 32px}
-header{display:flex;align-items:baseline;gap:16px;flex-wrap:wrap;margin-bottom:22px}
+header{display:flex;align-items:baseline;gap:16px;margin-bottom:22px}
+header>*{flex:none}
 .logo{font-family:"Unbounded",system-ui,sans-serif;font-size:28px;font-weight:800;letter-spacing:-.5px;line-height:1}
 .logo .acc{color:var(--accent)}
-.tag{color:var(--muted);line-height:1}
+.tag{color:var(--muted);line-height:1;flex:0 1 auto!important;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .theme{margin-left:auto;align-self:center;background:none;border:1px solid var(--line);border-radius:999px;width:30px;height:26px;display:inline-flex;align-items:center;justify-content:center;color:var(--muted);cursor:pointer;padding:0}
 .theme:hover{color:var(--text)}
 .theme svg{width:15px;height:15px}
@@ -107,21 +109,42 @@ h2{margin:0;font-size:15px;font-weight:700}
 .empty svg{width:44px;height:44px;opacity:.5}
 @media(max-width:520px){.page{padding:16px 16px 24px}.tag{display:none}}
 .ver{position:fixed;right:12px;bottom:8px;font-size:11px;color:var(--muted);opacity:.55;pointer-events:none;user-select:none}
+.theme+.theme{margin-left:0}
+/* the folder for the results: asked on the first start, then ⚙ */
+.dlg{position:fixed;inset:0;z-index:20;background:#0009;display:grid;place-items:center;padding:20px}
+.dbox{width:min(440px,100%);background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px;box-shadow:0 20px 60px #0008}
+.dbox h3{margin:0 0 14px;font-size:18px}
+.dbox .dl{font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px}
+.dpath{display:flex;align-items:center;gap:10px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--field);font-weight:600;word-break:break-word;-webkit-user-select:text;user-select:text}
+.dpath svg{width:20px;height:20px;color:var(--accent);flex:none}
+.drow{display:flex;gap:10px;margin-top:16px}
+.drow button{flex:1;height:42px;border-radius:12px;font-weight:700;font-size:14px;cursor:pointer;border:0;background:var(--accent);color:#fff}
+.drow button.alt{background:var(--field);border:1px solid var(--line);color:var(--text);font-weight:600}
+.drow button:hover{filter:brightness(1.08)}
+.dbox .hint{margin-top:12px}
 </style></head><body>
+<div class="dlg" id="dlg" hidden><div class="dbox" role="dialog">
+ <h3 id="dh">Куда сохранять готовое?</h3>
+ <div class="dl" id="dlab" hidden>Папка для сохранения</div>
+ <div class="dpath"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span id="dp"></span></div>
+ <div class="drow"><button class="alt" id="dpick">Выбрать другую папку…</button><button id="dok">Оставить</button></div>
+ <p class="hint" id="dn">Поменять можно в любой момент: ⚙ вверху.</p>
+</div></div>
 <div class="ver" id="ver"></div>
 <div class="page">
 <header>
  <div class="logo"><span class="acc">с</span>качивалка<span class="acc">.</span></div>
- <div class="tag">видео и звук с YouTube, ВК и других сайтов — сразу в «Загрузки»</div>
+ <div class="tag">видео и звук с YT, ВК и других сайтов</div>
  <a class="rstp" id="rstp" title="rstpstudio.ru">by<img class="lg-d" src="/rstp-logo.png" alt="RSTP Studio"><img class="lg-l" src="/rstp-logo-dark.png" alt="RSTP Studio"></a>
  <button class="upd" id="upd"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.3-5.6M20 4v4h-4"/></svg><span id="updt">Обновить</span><i class="dot"></i></button>
+ <button class="theme" id="gear" title="Настройки"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
  <button class="theme" id="theme"></button>
 </header>
 <main>
  <div class="col">
   <div class="card">
    <div class="urlrow"><input class="inp" id="url" placeholder="Вставь ссылку на видео" autocomplete="off" spellcheck="false"><button class="pbtn" id="paste">Вставить</button></div>
-   <label class="auto"><input type="checkbox" id="auto"> Сама вставлять скопированную ссылку</label>
+   <label class="auto"><input type="checkbox" id="auto"> Автоматически вставлять ссылку из буфера обмена</label>
    <div class="prev" id="prev" hidden><img id="pimg" alt=""><div class="t"><div class="n" id="pn"></div><div class="hint" id="pd"></div></div></div>
    <div class="label">Что скачать</div>
    <div class="modes" id="mode"><button data-v="video" class="on">Видео</button><button data-v="audio">Только звук</button></div>
@@ -133,7 +156,7 @@ h2{margin:0;font-size:15px;font-weight:700}
    <p class="hint center" id="thint" hidden>Пиши цифры подряд — двоеточия встанут сами. Колёсико или стрелки ↑↓ — по секунде, с Shift — по 10.</p>
    <button class="cta" id="go" disabled>Скачать</button>
   </div>
-  <button class="cta second" id="openf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Открыть «Загрузки»</button>
+  <button class="cta second" id="openf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Открыть папку с результатами</button>
  </div>
  <div class="col">
   <div class="card">
@@ -165,7 +188,12 @@ $('theme').onclick=()=>setTheme(theme==='dark'?'light':'dark',true);setTheme(the
 const val=id=>$(id).querySelector('.on').dataset.v;
 const QN={2160:'4K',1440:'2K'},qn=h=>QN[h]||h+'p';
 const hint=()=>{$('fmt').hidden=val('mode')!=='audio';$('q').hidden=val('mode')!=='video';const q=+val('q');
- $('hint').textContent=val('mode')==='video'?(q?`До ${qn(q)}`:'Самое высокое качество')+', файл MP4 — открывается в CapCut.':val('fmt')==='wav'?'WAV — без пережатия, удобно для монтажа.':'MP3 320 — файл поменьше.'};
+ $('hint').textContent='';goText()};
+/* the button shows the rough file size: «Скачать (≈ 310 МБ)» */
+function goText(){let b=0;const z=info&&info.sizes;
+ if(z){b=val('mode')==='audio'?z[val('fmt')]:z[val('q')];
+  if(b&&$('cut').classList.contains('on')&&info.duration){const s=$('t1').value?secOf($('t1')):0,e=$('t2').value?secOf($('t2')):info.duration;b*=Math.max(0,Math.min(1,(e-s)/info.duration))}}
+ $('go').textContent='Скачать'+(b?` (≈ ${mb(b)})`:'')}
 /* quality buttons: the sizes this video really has (after the link is looked up) */
 function qualities(hs){const cur=val('q'),std=[4320,2160,1440,1080,720,480,360,240];
  let top=0,lower=[1080,720];
@@ -175,28 +203,30 @@ function qualities(hs){const cur=val('q'),std=[4320,2160,1440,1080,720,480,360,2
 ['mode','fmt','q'].forEach(id=>$(id).onclick=e=>{const b=e.target.closest('button');if(!b)return;[...$(id).children].forEach(x=>x.classList.toggle('on',x===b));hint();try{localStorage.setItem(id,b.dataset.v)}catch(e){}});
 try{['mode','fmt'].forEach(id=>{const v=localStorage.getItem(id);if(v)[...$(id).children].forEach(x=>x.classList.toggle('on',x.dataset.v===v))})}catch(e){}
 hint();
-$('cut').onclick=()=>{const on=!$('cut').classList.contains('on');$('cut').classList.toggle('on',on);$('times').hidden=$('thint').hidden=!on;if(on)$('t1').focus()};
+$('cut').onclick=()=>{const on=!$('cut').classList.contains('on');$('cut').classList.toggle('on',on);$('times').hidden=$('thint').hidden=!on;if(on)$('t1').focus();goText()};
 /* time fields: digits in a row get their colons by themselves (0001 → 00:01, 10203 → 1:02:03); wheel / ↑↓ move by a second */
 const mask=s=>{const d=s.replace(/\D/g,'').slice(-6);return d.length<=2?d:d.length<=4?d.slice(0,-2)+':'+d.slice(-2):d.slice(0,-4)+':'+d.slice(-4,-2)+':'+d.slice(-2)};
 const toS=s=>{const p=s.split(':').map(Number);return p.reduce((a,b)=>a*60+b,0)};
 const secOf=el=>toS(el.value.includes(':')?el.value:'0:'+el.value);
 const maxS=()=>info&&info.duration?Math.floor(info.duration):359999;
 ['t1','t2'].forEach(id=>{const el=$(id);
- el.oninput=()=>{const m=mask(el.value);if(m!==el.value){el.value=m;el.setSelectionRange(m.length,m.length)}};
+ el.oninput=()=>{const m=mask(el.value);if(m!==el.value){el.value=m;el.setSelectionRange(m.length,m.length)}goText()};
  /* the start always stays at least a second before the end, the end — after the start and within the video */
  const lim=()=>id==='t1'?[0,($('t2').value?secOf($('t2')):maxS())-1]:[($('t1').value?secOf($('t1')):0)+1,maxS()];
- const put=v=>{const [lo,hi]=lim();el.value=dur(Math.max(lo,Math.min(v,hi)))};
+ const put=v=>{const [lo,hi]=lim();el.value=dur(Math.max(lo,Math.min(v,hi)));goText()};
  el.onblur=()=>{if(el.value)put(secOf(el))};
- const step=(e,k)=>{e.preventDefault();const empty=!el.value;let v=empty?(id==='t2'?maxS():0):secOf(el);
-  if(!empty||id==='t1')v+=k*(e.shiftKey?10:1);put(v)};
+ /* an empty end starts right after the start (not from the video's end) */
+ const step=(e,k)=>{e.preventDefault();const n=e.shiftKey?10:1;
+  if(!el.value){put(id==='t2'?($('t1').value?secOf($('t1')):0)+n:k>0?n:0);return}
+  put(secOf(el)+k*n)};
  let acc=0;el.onwheel=e=>{e.preventDefault();acc+=e.deltaY;while(Math.abs(acc)>=60){step(e,acc<0?1:-1);acc-=Math.sign(acc)*60}};
  el.onkeydown=e=>{if(e.key==='ArrowUp')step(e,1);else if(e.key==='ArrowDown')step(e,-1);else if(e.key==='Enter'&&!$('go').disabled){el.blur();$('go').click()}}});
 const flash=t=>{$('hint').textContent=t;$('hint').style.color='var(--accent)';clearTimeout(flash.t);flash.t=setTimeout(()=>{$('hint').style.color='';hint()},4500)};
 const isUrl=s=>/^https?:\/\/\S+$/.test(s.trim());
 const dur=s=>{s=Math.round(s);const h=Math.floor(s/3600),m=Math.floor(s%3600/60),c=String(s%60).padStart(2,'0');return h?`${h}:${String(m).padStart(2,'0')}:${c}`:`${m}:${c}`};
 /* the link: typed, pasted, or taken from the clipboard by itself */
-async function lookup(){const u=$('url').value.trim();$('go').disabled=!isUrl(u);if(!isUrl(u)){$('prev').hidden=true;info=null;return}
- if(u===infoFor)return;infoFor=u;info=null;$('prev').hidden=false;$('pimg').removeAttribute('src');$('pn').textContent='Смотрю, что за видео…';$('pd').textContent='';
+async function lookup(){const u=$('url').value.trim();$('go').disabled=!isUrl(u);if(!isUrl(u)){$('prev').hidden=true;info=null;goText();return}
+ if(u===infoFor)return;infoFor=u;info=null;goText();$('prev').hidden=false;$('pimg').removeAttribute('src');$('pn').textContent='Смотрю, что за видео…';$('pd').textContent='';
  try{const r=await(await fetch('/info?url='+encodeURIComponent(u))).json();if(u!==infoFor)return;
   if(r.error){$('pn').textContent=r.error;$('pd').textContent='';return}
   info=r;$('pn').textContent=r.title;$('pd').textContent=[r.channel,r.duration?dur(r.duration):''].filter(Boolean).join(' · ');
@@ -256,4 +286,13 @@ $('upd').onclick=async()=>{const b=$('upd');b.disabled=true;$('updt').textConten
  try{const r=await(await fetch('/update')).json();flash(r.msg);if(!/^Не /.test(r.msg))upd({v:r.v,latest:r.v,app:r.app})}catch(e){flash('Не получилось обновить. Проверь интернет')}
  b.disabled=false;$('updt').textContent='Обновить'};
 poll();if(auto)fromClip(false);
+/* the folder for the results: on the first start the program asks; ⚙ — change it any time */
+let folder={};
+const showDlg=first=>{$('dh').textContent=first?'Куда сохранять готовое?':'Настройки';$('dlab').hidden=first;$('dn').hidden=!first;
+ $('dpick').textContent=first?'Выбрать другую папку…':'Изменить…';$('dok').textContent=first?'Оставить':'Готово';$('dp').textContent=folder.pretty||'';$('dlg').hidden=false};
+const setFolder=f=>{folder=f;$('dp').textContent=f.pretty};
+fetch('/folder').then(r=>r.json()).then(f=>{setFolder(f);if(!f.asked)showDlg(true)}).catch(()=>{});
+$('gear').onclick=()=>fetch('/folder').then(r=>r.json()).then(f=>{setFolder(f);showDlg(false)}).catch(()=>{});
+$('dpick').onclick=async()=>{const b=$('dpick');b.disabled=true;try{const f=await(await fetch('/folder/pick')).json();setFolder(f);if(f.asked)$('dok').textContent='Готово'}catch(e){}b.disabled=false};
+$('dok').onclick=async()=>{try{setFolder(await(await fetch('/folder/keep')).json())}catch(e){}$('dlg').hidden=true};
 </script></body></html>
