@@ -595,7 +595,7 @@ def window(url):
               "cocoa.menu.cut": "Вырезать", "cocoa.menu.copy": "Копировать", "cocoa.menu.paste": "Вставить",
               "cocoa.menu.selectAll": "Выбрать всё"}
         dark = dark_os()
-        w = webview.create_window("Скачивалка", url, width=860, height=720, min_size=(480, 560), background_color="#0b0b0f" if dark else "#f4f1ec")
+        w = webview.create_window("Скачивалка", url, width=1100, height=780, min_size=(480, 560), background_color="#0b0b0f" if dark else "#f4f1ec")
         w.events.shown += lambda: shown.set()
         w.events.closed += lambda: closed.set()
         if WIN:

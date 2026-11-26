@@ -1,7 +1,7 @@
 {
- "version": "1.0.2",
- "tag": "v1.0.2",
- "notes": "Windows: при первом запуске больше не открывается лишний браузер",
+ "version": "1.0.3",
+ "tag": "v1.0.3",
+ "notes": "Скачивалка: окно при открытии больше",
  "pip": [
   {
    "import": "PIL",
@@ -30,7 +30,7 @@
  ],
  "files": {
   "Скачивалка/index.html": "e2346c220d1d3d8aad6d439e18f494f26d8699813ec53ca2ebcdda2e4709c1e4",
-  "Скачивалка/server.py": "25e6371b2ce745a83abad5a3d2b889f80e3f2ca4c887995db0b2fa49de903142",
+  "Скачивалка/server.py": "77b70ca488e7b5d50b2dd40f6cf83dec5c0dbaa88cd5775542d2760ee49ac233",
   "Скачивалка/updater.py": "7225db6f27259a08f3a3583646d96d55dfb36ffab7186e968043906db3364a09",
   "Скачивалка/значок/icon-256.png": "c35a74433ba4625c948ac20be3cda188ea3dd4d2427789d339b59e25955def12",
   "Скачивалка/значок/icon.icns": "25224def0d425b5b373e9f7867042bff0c25b36d9ae6e390fddd5b877a582e99",
