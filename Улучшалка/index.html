@@ -548,7 +548,7 @@ render();
 fetch('/appver').then(r=>r.json()).then(a=>{if(a.v&&a.v!=='0')$('ver').textContent='v'+a.v}).catch(()=>{});
 fetch('/appcheck').then(r=>r.json()).then(a=>{if(!a.new)return;const b=$('upd');b.hidden=false;b.title=`Есть новая версия Улучшалки: ${a.latest} (сейчас ${a.version}). Нажми, чтобы обновить`}).catch(()=>{});
 $('upd').onclick=async()=>{const b=$('upd');b.disabled=true;$('updt').textContent='Обновляю…';
- try{const r=await(await fetch('/appupdate')).json();flash(r.msg);if(r.ok){b.classList.remove('new');b.title=r.msg}}catch(e){flash('Не получилось обновить. Проверь интернет')}
+ try{const r=await(await fetch('/appupdate')).json();if(r.ok&&r.restart)return updReady(r.msg);flash(r.msg);if(r.ok){b.classList.remove('new');b.title=r.msg}}catch(e){flash('Не получилось обновить. Проверь интернет')}
  b.disabled=false;$('updt').textContent='Обновить'};
 /* the folder for the results: on the first start the program asks; ⚙ — change it any time */
 let folder={};
@@ -567,4 +567,61 @@ $('gear').onclick=()=>fetch('/folder').then(r=>r.json()).then(f=>{setFolder(f);s
 $('dpick').onclick=async()=>{const b=$('dpick');b.disabled=true;try{const f=await(await fetch('/folder/pick')).json();setFolder(f);if(f.asked)$('dok').textContent='Готово'}catch(e){}b.disabled=false};
 const dClose=async()=>{rec=null;$('dlg').hidden=true;try{setFolder(await(await fetch('/folder/keep')).json())}catch(e){}};
 $('dok').onclick=$('dx').onclick=$('kok').onclick=dClose;
-</script></body></html>
+</script>
+<!-- after «Обновить»: the card «Обновление готово» + «Перезапустить»; after the restart: «Что нового» once (same in both programs) -->
+<style>
+.nwpop{position:fixed;z-index:30;width:300px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 16px 14px;box-shadow:0 14px 40px #0006;animation:nwin .18s ease-out}
+@keyframes nwin{from{opacity:0;transform:translateY(-6px)}}
+.nwrow{display:flex;gap:11px;align-items:flex-start}
+.nwic{flex:none;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:#ff9f1a22;color:#ff9f1a}
+.nwic svg{width:18px;height:18px}
+.nwpop b,.nwbox b{display:block;font-size:15px;color:var(--text)}
+.nwpop p{margin:3px 0 0;font-size:13px;line-height:1.45;color:var(--muted)}
+.nwbtns{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}
+.nwbtns button{height:32px;padding:0 14px;border-radius:9px;border:1px solid var(--line);background:none;color:var(--text);font:inherit;font-size:13px;font-weight:600;cursor:pointer}
+.nwbtns button:hover{border-color:var(--muted)}
+.nwbtns .go{background:#ff9f1a;border-color:#ff9f1a;color:#1a1206}
+.nwbtns .go:hover{background:#ffb347;border-color:#ffb347}
+.upd.ok{color:var(--ok);border-color:var(--ok);animation:none}
+.upd.rs{color:#ff9f1a;border-color:#ff9f1a;animation:none}
+.nwdlg{position:fixed;inset:0;z-index:40;background:#0009;display:grid;place-items:center;padding:20px;animation:nwin .2s ease-out}
+.nwbox{width:min(420px,100%);max-height:calc(100vh - 40px);overflow:auto;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px;box-shadow:0 20px 60px #0008}
+.nwbox b{font-size:18px}
+.nwbox small{display:block;margin-top:3px;font-size:13px;color:var(--muted)}
+.nwbox ul{margin:16px 0 0;padding-left:20px;font-size:14px;line-height:1.55;color:var(--text)}
+.nwbox li+li{margin-top:7px}
+</style>
+<script>
+(()=>{
+const el=(h)=>{const d=document.createElement('div');d.innerHTML=h;return d.firstElementChild};
+const ic='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/><path d="M19 15l.8 2.2 2.2.8-2.2.8L19 21l-.8-2.2-2.2-.8 2.2-.8z"/></svg>';
+const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);
+let pop=null;
+const close=()=>{if(pop){pop.remove();pop=null}};
+const restart=async()=>{const b=document.getElementById('upd'),t=document.getElementById('updt');close();
+ b.disabled=true;t.textContent='Перезапускаю…';
+ try{const r=await(await fetch('/restart')).json();if(r.ok)return;flash(r.msg)}catch(e){return}  // the window closes by itself
+ b.disabled=false;t.textContent='Перезапустить'};
+const later=()=>{const b=document.getElementById('upd');close();b.classList.remove('ok','new');b.classList.add('rs');document.getElementById('updt').textContent='Перезапустить';
+ b.title='Новая версия уже скачана. Нажми, чтобы перезапустить программу'};
+/* called by «Обновить» when the new version is in place */
+window.updReady=(msg)=>{const b=document.getElementById('upd'),t=document.getElementById('updt');
+ const v=(String(msg).match(/\d+(\.\d+)+/)||[''])[0];
+ b.dataset.rs='1';b.hidden=false;b.disabled=false;b.classList.remove('new');b.classList.add('ok');t.textContent='Готово';
+ b.onclick=()=>{if(pop)return;if(b.classList.contains('rs'))return restart();show()};
+ const show=()=>{close();
+  pop=el(`<div class="nwpop" role="dialog"><div class="nwrow"><div class="nwic">${ic}</div><div><b>Обновление готово</b><p>Версия ${esc(v)} скачана. Перезапусти программу, чтобы она включилась</p></div></div><div class="nwbtns"><button class="no">Потом</button><button class="go">Перезапустить</button></div></div>`);
+  document.body.appendChild(pop);
+  const r=b.getBoundingClientRect();pop.style.top=(r.bottom+10)+'px';pop.style.left=Math.max(12,Math.min(r.right-300,innerWidth-312))+'px';
+  pop.querySelector('.no').onclick=later;pop.querySelector('.go').onclick=restart};
+ show()};
+/* «Что нового» — once after an update */
+fetch('/changes').then(r=>r.json()).then(c=>{if(!c.items||!c.items.length)return;
+ const d=el(`<div class="nwdlg"><div class="nwbox" role="dialog"><div class="nwrow"><div class="nwic">${ic}</div><div><b>Что нового в ${esc(c.version)}</b><small>Программа обновилась</small></div></div><ul>${c.items.map(i=>'<li>'+esc(i)+'</li>').join('')}</ul><div class="nwbtns"><button class="go">Понятно</button></div></div></div>`);
+ const ok=()=>{d.remove();fetch('/seen').catch(()=>{});removeEventListener('keydown',key,true)};
+ const key=e=>{if(e.key==='Enter'||e.key==='Escape'){e.preventDefault();e.stopPropagation();ok()}};
+ d.querySelector('.go').onclick=ok;d.onclick=e=>{if(e.target===d)ok()};addEventListener('keydown',key,true);
+ document.body.appendChild(d)}).catch(()=>{});
+})();
+</script>
+</body></html>

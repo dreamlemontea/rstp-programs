@@ -312,6 +312,9 @@ class H(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
+    def sendj(self, obj):
+        return self.send(json.dumps(obj, ensure_ascii=False).encode(), "application/json")
+
     def do_GET(self):
         u = urllib.parse.urlparse(self.path)
         q = urllib.parse.parse_qs(u.query)
@@ -343,6 +346,17 @@ class H(BaseHTTPRequestHandler):
             return self.send(json.dumps({"done": d, "total": t}).encode(), "application/json")
         if u.path.startswith("/folder"):
             return self.send(folder_route(u.path), "application/json")
+        if u.path == "/changes":  # «Что нового»: once after an update
+            return self.sendj(updater.changes())
+        if u.path == "/seen":
+            updater.seen()
+            return self.sendj({"ok": True})
+        if u.path == "/restart":  # after «Обновить»: close and open again, now the new version
+            if progress and any(d < t for d, t in progress.values()):
+                return self.sendj({"ok": False, "msg": "Сначала дождись, пока закончится улучшение"})
+            RESTART.set()
+            threading.Timer(0.3, restart_now).start()
+            return self.sendj({"ok": True})
         if u.path == "/appver":
             return self.send(json.dumps({"v": updater.current()}).encode(), "application/json")
         if u.path == "/appcheck":  # on start: is a newer version of the program on GitHub?
@@ -351,7 +365,7 @@ class H(BaseHTTPRequestHandler):
             if progress and any(d < t for d, t in progress.values()):
                 return self.send(json.dumps({"ok": False, "msg": "Сначала дождись, пока закончится улучшение"}, ensure_ascii=False).encode(), "application/json")
             ok, msg = updater.run()
-            return self.send(json.dumps({"ok": ok, "msg": msg}, ensure_ascii=False).encode(), "application/json")
+            return self.sendj({"ok": ok, "msg": msg, "restart": bool(updater.updated())})
         if u.path == "/site":  # the logo was clicked: the site in the usual browser
             webbrowser.open(SITE)
             self.send_response(204)
@@ -435,6 +449,33 @@ class H(BaseHTTPRequestHandler):
             progress.pop(job, None)
 
 
+WINDOW = None  # the program's window, once it is made
+RESTART = threading.Event()
+
+
+def restart_now():
+    """Closes the window: the main thread then starts the program again. Without a window (browser): right here."""
+    if WINDOW is not None:
+        try:
+            WINDOW.destroy()
+            return
+        except Exception as e:  # noqa: BLE001
+            print("window close failed:", e, flush=True)
+    shutil.rmtree(TMP, ignore_errors=True)
+    updater.relaunch()
+    os._exit(0)
+
+
+def bind(port):
+    """The usual port; right after «Перезапустить» the old program may still hold it for a moment."""
+    for _ in range(40 if "--restarted" in sys.argv else 1):
+        try:
+            return ThreadingHTTPServer(("127.0.0.1", port), H)
+        except OSError:
+            time.sleep(0.25)
+    return ThreadingHTTPServer(("127.0.0.1", 0), H)  # already taken (the program is open twice): any free port
+
+
 def window(url):
     """Its own window, like a normal program (pywebview: Safari engine on Mac, Edge on Windows). False if it can't be shown."""
     shown, closed = threading.Event(), threading.Event()
@@ -459,6 +500,8 @@ def window(url):
               "cocoa.menu.selectAll": "Выбрать всё"}
         dark = dark_os()
         w = webview.create_window("Улучшалка", url, width=1180, height=780, min_size=(880, 600), background_color="#0b0b0f" if dark else "#f4f1ec")
+        global WINDOW
+        WINDOW = w
         w.events.shown += lambda: shown.set()
         w.events.closed += lambda: closed.set()
         if WIN:
@@ -489,10 +532,7 @@ if __name__ == "__main__":
 
         ctypes.windll.kernel32.SetPriorityClass(ctypes.windll.kernel32.GetCurrentProcess(), 0x4000)
     shutil.rmtree(TMP, ignore_errors=True)  # unsaved variants of the last time
-    try:
-        srv = ThreadingHTTPServer(("127.0.0.1", 8777), H)
-    except OSError:  # already taken (the program is open twice): any free port
-        srv = ThreadingHTTPServer(("127.0.0.1", 0), H)
+    srv = bind(8777)
     url = f"http://127.0.0.1:{srv.server_address[1]}"
     print(f"Улучшалка: {url}", flush=True)
     if "--no-open" in sys.argv:
@@ -504,5 +544,8 @@ if __name__ == "__main__":
         while True:
             time.sleep(3600)
     srv.shutdown()  # the window is closed: everything stops, unsaved variants are wiped
+    srv.server_close()
     shutil.rmtree(TMP, ignore_errors=True)
+    if RESTART.is_set():
+        updater.relaunch()
     os._exit(0)

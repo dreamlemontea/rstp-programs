@@ -503,6 +503,17 @@ class H(BaseHTTPRequestHandler):
             return self.send(json.loads(folder_route(u.path)))
         if u.path == "/busy":  # the automatic yt-dlp update is going on
             return self.send({"on": auto["on"]})
+        if u.path == "/changes":  # «Что нового»: once after an update
+            return self.send(updater.changes())
+        if u.path == "/seen":
+            updater.seen()
+            return self.send({"ok": True})
+        if u.path == "/restart":  # after «Обновить»: close and open again, now the new version
+            if any(j["state"] == "work" for j in jobs.values()):
+                return self.send({"ok": False, "msg": "Сначала дождись, пока закончатся скачивания"})
+            RESTART.set()
+            threading.Timer(0.3, restart_now).start()
+            return self.send({"ok": True})
         if u.path == "/appver":
             return self.send({"v": updater.current()})
         if u.path == "/version":
@@ -518,7 +529,7 @@ class H(BaseHTTPRequestHandler):
                 ok, m = updater.run()
                 if not ok:
                     return self.send({"v": version(), "msg": m, "app": app})
-                return self.send({"v": version(), "msg": m + ". yt-dlp: " + update(), "app": updater.check()})
+                return self.send({"v": version(), "msg": m + ". yt-dlp: " + update(), "app": updater.check(), "restart": True})
             return self.send({"v": version(), "msg": update(), "app": app})
         if u.path == "/cancel":
             j = jobs.get(q.get("id", ""))
@@ -573,6 +584,33 @@ class H(BaseHTTPRequestHandler):
         return self.send({"id": jid})
 
 
+WINDOW = None  # the program's window, once it is made
+RESTART = threading.Event()
+
+
+def restart_now():
+    """Closes the window: the main thread then starts the program again. Without a window (browser): right here."""
+    if WINDOW is not None:
+        try:
+            WINDOW.destroy()
+            return
+        except Exception as e:  # noqa: BLE001
+            print("window close failed:", e, flush=True)
+    stop_all()
+    updater.relaunch()
+    os._exit(0)
+
+
+def bind(port):
+    """The usual port; right after «Перезапустить» the old program may still hold it for a moment."""
+    for _ in range(40 if "--restarted" in sys.argv else 1):
+        try:
+            return ThreadingHTTPServer(("127.0.0.1", port), H)
+        except OSError:
+            time.sleep(0.25)
+    return ThreadingHTTPServer(("127.0.0.1", 0), H)  # already taken (the program is open twice): any free port
+
+
 def window(url):
     """Its own window, like a normal program (pywebview). False if it can't be shown."""
     shown, closed = threading.Event(), threading.Event()
@@ -596,6 +634,8 @@ def window(url):
               "cocoa.menu.selectAll": "Выбрать всё"}
         dark = dark_os()
         w = webview.create_window("Скачивалка", url, width=1100, height=780, min_size=(480, 560), background_color="#0b0b0f" if dark else "#f4f1ec")
+        global WINDOW
+        WINDOW = w
         w.events.shown += lambda: shown.set()
         w.events.closed += lambda: closed.set()
         if WIN:
@@ -628,10 +668,7 @@ if __name__ == "__main__":
     if "--update" in sys.argv:  # the Windows installer fetches yt-dlp this way
         print(update(), flush=True)
         sys.exit(0 if os.path.isfile(YTDLP) else 1)
-    try:
-        srv = ThreadingHTTPServer(("127.0.0.1", 8778), H)
-    except OSError:
-        srv = ThreadingHTTPServer(("127.0.0.1", 0), H)
+    srv = bind(8778)
     url = f"http://127.0.0.1:{srv.server_address[1]}"
     print(f"Скачивалка: {url}", flush=True)
     threading.Thread(target=auto_update, daemon=True).start()
@@ -644,4 +681,7 @@ if __name__ == "__main__":
             time.sleep(3600)
     stop_all()  # the window is closed: unfinished downloads stop too
     srv.shutdown()
+    srv.server_close()
+    if RESTART.is_set():
+        updater.relaunch()
     os._exit(0)

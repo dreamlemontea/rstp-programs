@@ -2,7 +2,8 @@
 # The new versions are on GitHub: github.com/dreamlemontea/rstp-programs (put there by обновление/выложить.sh).
 # manifest.json there says the version, its tag and the SHA-256 of every file. Only the files that differ are
 # downloaded (each checked against its SHA-256) and put in place; both programs are updated together, since
-# they share one Python. Missing libraries from manifest "pip" are installed. Then the program asks to be reopened.
+# they share one Python. Missing libraries from manifest "pip" are installed. Then the program offers «Перезапустить» (relaunch) and
+# shows «Что нового» once (changes).
 import hashlib, json, os, subprocess, sys, threading, urllib.parse, urllib.request
 
 REPO = "dreamlemontea/rstp-programs"
@@ -120,7 +121,8 @@ def run():
         for top in {rel.split("/")[0] for rel in m["files"]}:
             if os.path.isdir(os.path.join(ROOT, top)):
                 open(os.path.join(ROOT, top, "version.txt"), "w", encoding="utf-8").write(m["version"] + "\n")
-        return True, f"Обновлено до версии {m['version']}. Закрой программу и открой заново"
+        _cache["updated"] = m["version"]  # the window offers «Перезапустить»
+        return True, f"Обновлено до версии {m['version']}"
     except Exception as e:  # noqa: BLE001
         print("update failed:", e, flush=True)
         for rel, dst, want in locals().get("todo", []):
@@ -131,3 +133,61 @@ def run():
         return False, "Не получилось обновить программу. Проверь интернет и попробуй ещё раз"
     finally:
         _lock.release()
+
+
+def updated():
+    """The version just put in place by run() (the running program is still the old one), or ''."""
+    return _cache.get("updated", "")
+
+
+def changes():
+    """What's new in this version (changes.json, written by hand in общее/что нового.json) — shown once after an update.
+    seen.txt remembers the version whose news were already shown; a fresh install has it from the installer."""
+    cur = current()
+    try:
+        seen = open(os.path.join(HERE, "seen.txt"), encoding="utf-8").read().strip()
+    except OSError:
+        seen = ""
+    if seen == cur:
+        return {"version": cur, "items": []}
+    try:
+        items = json.load(open(os.path.join(HERE, "changes.json"), encoding="utf-8")).get(cur, [])
+    except (OSError, ValueError):
+        items = []
+    return {"version": cur, "items": items}
+
+
+def seen():
+    open(os.path.join(HERE, "seen.txt"), "w", encoding="utf-8").write(current() + "\n")
+
+
+def _app_bundle():
+    """Mac: the .app of this program (the gift installer's or EATSIST's own build), found by its id."""
+    ids = {"Улучшалка": ("ru.reliznaya.uluchshalka", "studio.rstp.uluchshalka"),
+           "Скачивалка": ("ru.reliznaya.skachivalka", "studio.rstp.skachivalka")}.get(os.path.basename(HERE), ())
+    try:
+        import AppKit
+
+        ws = AppKit.NSWorkspace.sharedWorkspace()
+        for i in ids:
+            u = ws.URLForApplicationWithBundleIdentifier_(i)
+            if u is not None and os.path.isdir(u.path()):
+                return u.path()
+    except Exception as e:  # noqa: BLE001
+        print("app not found:", e, flush=True)
+    return ""
+
+
+def relaunch():
+    """Starts the program again (the new version) once this process is gone. The caller then exits."""
+    app = "" if WIN else _app_bundle()
+    if app:  # through its .app, so the Dock and the menu are right; waits until this process is closed
+        subprocess.Popen(["/bin/sh", "-c", 'while kill -0 "$1" 2>/dev/null; do sleep 0.2; done; open "$2"', "sh", str(os.getpid()), app],
+                         start_new_session=True, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        return
+    py = os.environ.get("__PYVENV_LAUNCHER__") or sys.executable  # the venv's python (the Mac's real Python.app can't be started directly)
+    args = [py, os.path.join(HERE, "server.py")] + [a for a in sys.argv[1:] if a != "--restarted"] + ["--restarted"]
+    if WIN:  # DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP | CREATE_NO_WINDOW
+        subprocess.Popen(args, cwd=HERE, creationflags=0x00000008 | 0x00000200 | 0x08000000, close_fds=True)
+    else:
+        subprocess.Popen(args, cwd=HERE, start_new_session=True)
