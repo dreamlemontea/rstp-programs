@@ -51,7 +51,7 @@ main{flex:1;min-height:0;display:grid;grid-template-columns:330px minmax(0,1fr);
 /* drop zone */
 .drop{border:2px dashed var(--dash);border-radius:14px;background:var(--field);padding:22px 14px;text-align:center;cursor:pointer;transition:border-color .15s,background .15s}
 .drop:hover{border-color:var(--muted)}
-.drop.over,body.over .drop{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 8%,var(--field))}
+.drop.over,body.dragging .drop{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 8%,var(--field))}
 .drop svg{width:34px;height:34px;color:var(--accent);margin-bottom:6px}
 .drop b{display:block;font-size:15px;margin-bottom:3px}
 .drop.small{padding:12px;display:flex;align-items:center;justify-content:center;gap:10px}
@@ -94,6 +94,19 @@ main{flex:1;min-height:0;display:grid;grid-template-columns:330px minmax(0,1fr);
 .box{position:relative;border-radius:12px;overflow:hidden;background:var(--field);line-height:0;flex:none}
 .box img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;-webkit-user-drag:none}
 .cmp{touch-action:none;cursor:ew-resize}
+.chk{display:flex;align-items:center;gap:10px;margin-top:16px;font-weight:700;cursor:pointer}
+.chk input{width:18px;height:18px;margin:0;accent-color:var(--accent);cursor:pointer}
+.tools{display:flex;align-items:center;gap:12px;margin-top:10px}
+.tools input{flex:1;min-width:0;accent-color:var(--accent)}
+#pv{position:absolute;inset:0;width:100%;height:100%;touch-action:none;transform-origin:0 0}
+.zbar{position:absolute;right:10px;top:10px;display:flex;align-items:center;gap:2px;line-height:1;background:#000b;border-radius:999px;padding:3px}
+.zbar button{min-width:28px;height:28px;border:0;background:none;color:#fff;border-radius:999px;cursor:pointer;font-size:18px;display:grid;place-items:center;padding:0 4px}
+.zbar button:hover{background:#fff2}.zbar #zl{min-width:48px;font-size:12px;font-variant-numeric:tabular-nums}
+#hist{margin-left:auto}#hist button{width:34px}.icons button:disabled{opacity:.3;cursor:default}
+.tools .ti{width:20px;height:20px;flex:none;color:var(--muted);display:grid;place-items:center}.tools .ti svg{width:18px;height:18px}
+.tools .icons button{width:44px}
+#s3 .ring{position:absolute;border:1.5px solid #fff;border-radius:50%;box-shadow:0 0 0 1px #0008;pointer-events:none;transform:translate(-50%,-50%)}
+#vb,#sb,#s3,#va,#sa{background:repeating-conic-gradient(#9994 0 25%,#0000 0 50%) 0 0/16px 16px}
 .cmp .a{clip-path:inset(0 50% 0 0)}
 .cmp .ln{position:absolute;top:0;bottom:0;left:50%;width:2px;margin-left:-1px;background:#fff;box-shadow:0 0 6px #0009}
 .cmp .ln:after{content:"";position:absolute;top:50%;left:50%;width:30px;height:30px;margin:-15px 0 0 -15px;border-radius:50%;background:#fff;box-shadow:0 1px 6px #0007}
@@ -130,8 +143,13 @@ main{flex:1;min-height:0;display:grid;grid-template-columns:330px minmax(0,1fr);
 .theme+.theme{margin-left:0}
 /* the folder for the results: asked on the first start, then ⚙ */
 .dlg{position:fixed;inset:0;z-index:20;background:#0009;display:grid;place-items:center;padding:20px}
-.dbox{width:min(440px,100%);background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px;box-shadow:0 20px 60px #0008}
-.dbox h3{margin:0 0 14px;font-size:18px}
+.dbox{width:min(440px,100%);max-height:calc(100vh - 40px);overflow:auto;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px;box-shadow:0 20px 60px #0008}
+.dbox h3{margin:0;font-size:18px;flex:1}
+.dhead{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.dic{width:32px;height:32px;border:0;background:var(--field);color:var(--text);border-radius:10px;cursor:pointer;display:grid;place-items:center;flex:none}.dic svg{width:18px;height:18px}.dic:hover{color:var(--accent)}
+.mi{display:flex;align-items:center;gap:12px;width:100%;padding:14px;margin-top:8px;border:1px solid var(--line);background:var(--field);color:var(--text);border-radius:12px;cursor:pointer;font:inherit;font-size:15px;font-weight:600;text-align:left}
+.mi:first-child{margin-top:0}.mi:hover{border-color:var(--accent)}.mi svg{width:20px;height:20px;color:var(--accent);flex:none}
+.mi span{flex:1;display:flex;flex-direction:column;gap:3px;min-width:0}.mi small{color:var(--muted);font-weight:500;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.mi i{font-style:normal;color:var(--muted);font-size:22px;line-height:1}
 .dbox .dl{font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px}
 .dpath{display:flex;align-items:center;gap:10px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--field);font-weight:600;word-break:break-word;-webkit-user-select:text;user-select:text}
 .dpath svg{width:20px;height:20px;color:var(--accent);flex:none}
@@ -140,19 +158,26 @@ main{flex:1;min-height:0;display:grid;grid-template-columns:330px minmax(0,1fr);
 .drow button.alt{background:var(--field);border:1px solid var(--line);color:var(--text);font-weight:600}
 .drow button:hover{filter:brightness(1.08)}
 .dbox .hint{margin-top:12px}
+.klist{display:flex;flex-direction:column;gap:2px}.krow{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:14px;padding:3px 0}
+.krow button{min-width:74px;height:30px;padding:0 10px;border-radius:8px;border:1px solid var(--line);background:var(--field);color:var(--text);font:inherit;font-weight:700;cursor:pointer;font-variant-numeric:tabular-nums}
+.krow button:hover{border-color:var(--accent)}.krow button.rec{border-color:var(--accent);color:var(--accent)}
 </style></head><body>
 <div class="dlg" id="dlg" hidden><div class="dbox" role="dialog">
- <h3 id="dh">Куда сохранять готовое?</h3>
- <div class="dl" id="dlab" hidden>Папка для сохранения</div>
+ <div class="dhead"><button class="dic" id="dback" title="Назад" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 5-7 7 7 7"/></svg></button><h3 id="dh">Куда сохранять готовое?</h3><button class="dic" id="dx" title="Закрыть" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+ <div id="dmenu" hidden><button class="mi" data-p="pfold"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span>Папка для сохранения<small id="mfold"></small></span><i>›</i></button><button class="mi" data-p="keys"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="6" width="19" height="12" rx="2.5"/><path d="M6.5 10h.01M10 10h.01M14 10h.01M17.5 10h.01M7.5 14h9"/></svg><span>Горячие клавиши</span><i>›</i></button></div>
+ <div id="pfold">
  <div class="dpath"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span id="dp"></span></div>
  <div class="drow"><button class="alt" id="dpick">Выбрать другую папку…</button><button id="dok">Оставить</button></div>
  <p class="hint" id="dn">Поменять можно в любой момент: ⚙ вверху.</p>
+ </div>
+ <div id="keys" hidden><div class="klist" id="klist"></div><p class="hint" id="kfix"></p><div class="drow"><button class="alt" id="kreset">Вернуть как было</button><button id="kok">Готово</button></div></div>
+</div></div>
 </div></div>
 <div class="ver" id="ver"></div>
 <div class="page">
 <header>
  <div class="logo"><span class="acc">у</span>лучшалка<span class="acc">.</span></div>
- <div class="tag">делает изображения чётче — прямо на этом компьютере</div>
+ <div class="tag">делает изображения чётче с помощью нейросетей</div>
  <a class="rstp" id="rstp" title="rstpstudio.ru">by<img class="lg-d" src="/rstp-logo.png" alt="RSTP Studio"><img class="lg-l" src="/rstp-logo-dark.png" alt="RSTP Studio"></a>
  <button class="upd new" id="upd" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.3-5.6M20 4v4h-4"/></svg><span id="updt">Обновить</span><i class="dot"></i></button>
  <button class="theme" id="gear" title="Настройки"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
@@ -166,6 +191,14 @@ main{flex:1;min-height:0;display:grid;grid-template-columns:330px minmax(0,1fr);
     <b>Перетащи изображения сюда</b><span class="hint">или нажми, чтобы выбрать. Можно сразу несколько.</span>
    </div>
    <input id="file" type="file" accept="image/*" multiple hidden>
+   <label class="chk"><input type="checkbox" id="nobg">Убрать фон</label>
+   <div id="tools" hidden>
+    <div class="tools"><div class="icons" id="tool"><button data-v="brush" title="Кисть"></button><button data-v="eraser" title="Ластик"></button><button data-v="lasso" title="Лассо"></button><button data-v="smart" title="Умное выделение: нажми на предмет"></button></div><div class="icons" id="hist"><button data-v="undo"></button><button data-v="redo"></button></div></div>
+    <div class="tools" id="mrow" hidden><div class="icons" id="smode"><button data-v="add"></button><button data-v="cut"></button></div></div>
+    <div class="tools" id="brow"><span class="ti" title="Размер кисти"></span><input type="range" id="bsize" min="4" max="150" value="40" title="Размер кисти"></div>
+    <div class="tools"><span class="ti" title="Мягкие края"></span><input type="range" id="soft" min="0" max="20" value="0" title="Мягкие края"></div>
+    <button class="cta second" id="apply" style="margin-top:10px"></button>
+   </div>
    <div class="label">Что на изображении</div>
    <div class="modes" id="kind"><button data-v="anime" class="on">Рисунок, арт</button><button data-v="photo">Живое фото</button></div>
    <div class="modes small" id="look" hidden><button data-v="nomos" class="on">Резче</button><button data-v="x4plus">Мягче</button></div>
@@ -175,7 +208,7 @@ main{flex:1;min-height:0;display:grid;grid-template-columns:330px minmax(0,1fr);
    <button class="cta" id="go" disabled>Улучшить</button>
   </div>
   <button class="cta second" id="openf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Открыть папку с результатами</button>
-  <p class="note">Переключай настройки — изображение улучшится заново, прошлые варианты останутся. Понравилось — «Сохранить»: ляжет в выбранную папку (⚙ вверху).</p>
+  <p class="note">Переключай настройки — изображение улучшится заново в порядке очереди, прошлые варианты останутся. Понравилось — «Сохранить»: ляжет в выбранную папку (⚙ вверху).</p>
  </div>
  <div class="col">
   <div class="card" id="view">
@@ -195,6 +228,7 @@ main{flex:1;min-height:0;display:grid;grid-template-columns:330px minmax(0,1fr);
     <div class="box" id="s1" hidden><img id="sa" alt="" draggable="false"><span class="tagl l">Было</span></div>
     <div class="box" id="s2" hidden><img id="sb" alt="" draggable="false"><span class="tagl l">Стало</span></div>
     <div class="box" id="s0" hidden><img id="so" alt="" draggable="false"></div>
+    <div class="box" id="s3" hidden><canvas id="pv"></canvas><i class="ring" id="ring" hidden></i><div class="zbar" id="zbar"><button data-z="-">−</button><button id="zl" data-z="0">100%</button><button data-z="+">+</button></div></div>
     <div class="over" id="over" hidden><div id="ot"></div><div class="bar wait" id="ob"><i></i></div></div>
    </div>
    <div class="vars" id="vars" hidden></div>
@@ -212,10 +246,24 @@ const IC={
  wipe:'<rect x="3" y="4.5" width="18" height="15" rx="3"/><path d="M12 2.5v19"/><path d="m8.5 10-2 2 2 2M15.5 10l2 2-2 2"/>',
  side:'<rect x="2.5" y="5" width="8.5" height="14" rx="2.2"/><rect x="13" y="5" width="8.5" height="14" rx="2.2"/>',
  sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
- moon:'<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>'};
+ moon:'<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>',
+ lasso:'<path d="M4.5 11.5C3.4 7.5 7.6 4 12.4 4c4.9 0 8.3 3 7.4 6.6-.8 3.3-5.3 5.2-9.6 4.7"/><path d="M4.5 11.5c.6 2 2.3 3.2 4.5 3.6"/><circle cx="8.4" cy="17.3" r="2"/><path d="M8.4 19.3c0 1.3-.7 2.2-2 2.7"/>',
+ smart:'<path d="M15 4V2M15 16v-2M8 9h2M20 9h2M17.8 11.8 19 13M17.8 6.2 19 5M12.2 6.2 11 5"/><path d="m15 9-12 12"/>',
+ size:'<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/>',
+ soft:'<circle cx="12" cy="12" r="8" stroke-dasharray="2.5 2.5"/><circle cx="12" cy="12" r="4"/>',
+ check:'<path d="m5 12.5 4.5 4.5L19 7.5"/>',
+ brush:'<path d="M18.4 3.6a2 2 0 0 1 2.8 2.8L11.5 16.1l-3.6-3.6z"/><path d="M7.4 13.5c-2 0-3.6 1.6-3.6 3.6 0 1.4-.6 2.4-1.8 3.1 3 .6 7.2.2 8-3.1"/>',
+ plus:'<path d="M12 5v14M5 12h14"/>',
+ minus:'<path d="M5 12h14"/>',
+ undo:'<path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/>',
+ redo:'<path d="m15 14 5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/>',
+ eraser:'<path d="M8 20h12"/><path d="M4.3 14.3 14 4.6a2 2 0 0 1 2.8 0l3.6 3.6a2 2 0 0 1 0 2.8L11.4 20H8.6a2 2 0 0 1-1.4-.6l-2.9-2.9a2 2 0 0 1 0-2.2z"/><path d="m9 9.6 6.4 6.4"/>'};
 const svg=k=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${IC[k]}</svg>`;
 $('mode').children[0].innerHTML=svg('wipe');$('mode').children[1].innerHTML=svg('side');$('showf').innerHTML=svg('show');
-$('save').innerHTML=svg('dl')+'Сохранить';
+$('save').innerHTML=svg('dl')+'Сохранить';['brush','eraser','lasso','smart'].forEach((k,i)=>$('tool').children[i].innerHTML=svg(k));
+document.querySelectorAll('#tools .ti').forEach((e,i)=>e.innerHTML=svg(i?'soft':'size'));$('apply').innerHTML=svg('check')+'Применить';$('smode').children[0].innerHTML=svg('plus');$('smode').children[1].innerHTML=svg('minus');
+const MAC=/Mac/.test(navigator.platform),CMD=MAC?'⌘':'Ctrl+';$('hist').children[0].innerHTML=svg('undo');$('hist').children[1].innerHTML=svg('redo');
+
 /* day / night, as on the site: first as the Mac is, then what was chosen */
 let theme=matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';
 try{theme=localStorage.getItem('theme')||theme}catch(e){}
@@ -226,11 +274,12 @@ $('theme').onclick=()=>setTheme(theme==='dark'?'light':'dark',true);setTheme(the
 const val=id=>$(id).querySelector('.on').dataset.v;
 const setv=(id,v)=>[...$(id).children].forEach(x=>x.classList.toggle('on',x.dataset.v===v));
 const model=()=>val('kind')==='anime'?'anime':val('look');
-const key=()=>model()+'|'+val('scale');
+const bgk=(it=cur)=>!$('nobg').checked?'0':it&&it.maskVer?'1.'+it.maskVer:'1';
+const key=(it=cur)=>model()+'|'+val('scale')+'|'+bgk(it);
 const NAME={anime:'Рисунок',nomos:'Фото резче',x4plus:'Фото мягче'};
-const label=k=>{const[m,s]=k.split('|');return NAME[m]+' ×'+s};
+const label=k=>{const[m,s,b='0']=k.split('|');return NAME[m]+' ×'+s+(b==='0'?'':' без фона'+(b.includes('.')?' ✎'+b.split('.')[1]:''))};
 const hint=()=>{$('look').hidden=val('kind')!=='photo';$('hint').textContent=val('kind')==='anime'?'Для рисунков, аниме и арта с чёткими линиями.':val('look')==='nomos'?'Больше мелких деталей и чёткости.':'Естественнее — для лиц и кожи.'};
-function useKey(k){const[m,s]=k.split('|');setv('kind',m==='anime'?'anime':'photo');if(m!=='anime')setv('look',m);setv('scale',s);hint()}
+function useKey(k){const[m,s,b]=k.split('|');setv('kind',m==='anime'?'anime':'photo');if(m!=='anime')setv('look',m);setv('scale',s);$('nobg').checked=!!b&&b!=='0';$('tools').hidden=!$('nobg').checked;hint()}
 /* a setting changed: the picture on screen is made again that way (or the ready variant is shown) */
 ['kind','look','scale'].forEach(id=>$(id).onclick=e=>{const b=e.target.closest('button');if(!b)return;setv(id,b.dataset.v);hint();
  /* clicked several settings in a row: only the last choice is made (a variant already being made is finished) */
@@ -244,37 +293,46 @@ const add=fs=>{const ok=[...fs].filter(f=>f.type.startsWith('image/')||/\.(png|j
 const flash=t=>{$('hint').textContent=t;$('hint').style.color='var(--accent)';clearTimeout(flash.t);flash.t=setTimeout(()=>{$('hint').style.color='';hint()},3500)};
 $('drop').onclick=()=>$('file').click();$('file').onchange=e=>{add(e.target.files);e.target.value=''};
 let dc=0;
-addEventListener('dragenter',e=>{if(!e.dataTransfer.types.includes('Files'))return;e.preventDefault();dc++;document.body.classList.add('over')});
-addEventListener('dragleave',()=>{if(--dc<=0){dc=0;document.body.classList.remove('over')}});
+addEventListener('dragenter',e=>{if(!e.dataTransfer.types.includes('Files'))return;e.preventDefault();dc++;document.body.classList.add('dragging')});
+addEventListener('dragleave',()=>{if(--dc<=0){dc=0;document.body.classList.remove('dragging')}});
 addEventListener('dragover',e=>e.preventDefault());
-addEventListener('drop',e=>{e.preventDefault();dc=0;document.body.classList.remove('over');add(e.dataTransfer.files)});
+addEventListener('drop',e=>{e.preventDefault();dc=0;document.body.classList.remove('dragging');add(e.dataTransfer.files)});
 $('openf').onclick=()=>fetch('/open').catch(()=>{});
 /* improving: one at a time, in order */
 const busyWith=(it,k)=>queue.some(q=>q.it===it&&q.k===k)||(it.job&&it.job.k===k);
-function enqueue(it,k){if(busyWith(it,k))return;queue.push({it,k});if(it.st!=='work')it.st=Object.keys(it.vars).length?'done':'wait';run()}
-$('go').onclick=()=>{items.filter(i=>!Object.keys(i.vars).length&&!i.job&&!queue.some(q=>q.it===i)).forEach(i=>enqueue(i,key()));render()};
+function enqueue(it,k){if(busyWith(it,k))return;let mask=null;
+ /* «Убрать фон» with the mask on screen (fixed with the brush or not): a copy goes with this variant; later strokes make the next one */
+ if(k.split('|')[2]!=='0'&&it.mask){mask=document.createElement('canvas');mask.width=it.mask.width;mask.height=it.mask.height;const x=mask.getContext('2d');x.fillStyle='#000';x.fillRect(0,0,mask.width,mask.height);x.drawImage(it.mask,0,0);it.dirty=false}
+ let before=null;  /* «Было» for this variant: the picture already without the background, as it was cut */
+ if(mask&&it.img){const W=it.mask.width,H=it.mask.height,c=cv(W,H),y=c.getContext('2d');y.filter=soft()?`blur(${soft()}px)`:'none';y.drawImage(it.mask,0,0);y.filter='none';
+  y.globalCompositeOperation='source-in';y.drawImage(it.img,0,0,W,H);before=new Promise(r=>c.toBlob(b=>r(b?URL.createObjectURL(b):null),'image/png'))}
+ queue.push({it,k,mask,before,soft:soft()});if(it.st!=='work')it.st=Object.keys(it.vars).length?'done':'wait';run()}
+const curNew=()=>cur&&Object.keys(cur.vars).length&&!cur.vars[key()]&&!busyWith(cur,key());
+$('go').onclick=()=>{if(curNew())enqueue(cur,key());items.filter(i=>!Object.keys(i.vars).length&&!i.job&&!queue.some(q=>q.it===i)).forEach(i=>enqueue(i,key(i)));render()};
 function nice(t){t=String(t||'');
+ if(/bgnet|onnx|curl|pip|non-zero/i.test(t))return 'Не получилось скачать нейросеть для фона. Проверь интернет и попробуй ещё раз';
  if(/identify|cannot|truncated|decode|broken/i.test(t))return 'Не получилось открыть — файл повреждён или это не изображение';
  if(/memory|alloc/i.test(t))return 'Слишком большое. Попробуй «В 2 раза»';
  if(/fetch|network|load failed/i.test(t))return 'Программа остановилась. Открой её заново';
  return 'Не получилось улучшить. Попробуй ещё раз'}
 async function run(){if(running)return;running=true;
- while(queue.length){const{it,k}=queue.shift();if(!items.includes(it)||it.vars[k])continue;
-  const[m,scale]=k.split('|'),id=Math.random().toString(36).slice(2);it.job={k,pct:0};it.st='work';render();
+ while(queue.length){const{it,k,mask,before,soft:sf}=queue.shift();if(!items.includes(it)||it.vars[k])continue;
+  const[m,scale,bg]=k.split('|'),id=Math.random().toString(36).slice(2);it.job={k,pct:0};it.st='work';render();
   const poll=setInterval(async()=>{try{const p=await(await fetch('/progress?id='+id)).json();if(p.total&&it.job){it.job.pct=Math.max(1,Math.round(p.done/p.total*100));progress(it)}}catch(e){}},500);
-  try{const r=await fetch(`/up?kind=${m}&scale=${scale}&id=${id}&name=${encodeURIComponent(it.f.name)}`,{method:'POST',body:it.f});
+  try{let mid='';if(mask){const b=await new Promise(r=>mask.toBlob(r,'image/png'));mid=(await(await fetch('/maskup',{method:'POST',body:b})).json()).id}
+   const r=await fetch(`/up?kind=${m}&scale=${scale}&bg=${bg}&mask=${mid}&soft=${bg!=='0'?sf:0}&id=${id}&name=${encodeURIComponent(it.f.name)}`,{method:'POST',body:it.f});
    if(!r.ok)throw new Error(await r.text());const inf=JSON.parse(decodeURIComponent(r.headers.get('X-Info')));
-   it.vars[k]={out:URL.createObjectURL(await r.blob()),path:inf.path,w:inf.w,h:inf.h,secs:inf.secs,scale:+scale};
+   it.vars[k]={out:URL.createObjectURL(await r.blob()),path:inf.path,w:inf.w,h:inf.h,secs:inf.secs,scale:+scale,bg:bg!=='0',before:before&&await before};
    if(!items.includes(it))forget([inf.path]);
    /* the one on screen shows the new variant if the switches still point at it */
-   if(it!==cur||key()===k||!it.key)it.key=k;it.err=null}
+   if(it!==cur||key()===k||!it.key)it.key=k;if(it===cur&&key()===k){setTool(null);it.editing=false}it.err=null}
   catch(e){it.err=nice(e.message);if(it===cur)flash(it.err)}
   clearInterval(poll);it.job=null;it.st=Object.keys(it.vars).length?'done':it.err?'err':'wait';render()}
  running=false;render()}
-/* saving: the chosen variant to «Изображения → Улучшалка», the other variants of that picture are wiped */
+/* saving: the chosen variant to the chosen folder, the other variants of that picture are wiped */
 const forget=paths=>paths.length&&fetch('/forget',{method:'POST',body:JSON.stringify({paths})}).catch(()=>{});
 async function save(it){const v=it.vars[it.key];if(!v||v.saved)return true;
- try{const r=await(await fetch('/save',{method:'POST',body:JSON.stringify({path:v.path,name:it.f.name,scale:v.scale})})).json();
+ try{const r=await(await fetch('/save',{method:'POST',body:JSON.stringify({path:v.path,name:it.f.name,scale:v.scale,bg:v.bg})})).json();
   if(r.error){flash(r.error);return false}
   forget(Object.entries(it.vars).filter(([k])=>k!==it.key).map(([,x])=>x.path));
   v.saved=r.path;it.vars={[it.key]:v};return true}catch(e){flash('Не получилось сохранить. Открой программу заново');return false}}
@@ -289,13 +347,15 @@ function place(p){pos=p;$('va').style.clipPath=`inset(0 ${100-p}% 0 0)`;$('vl').
 function fit(){const S=$('stage');if(S.hidden||!cur)return;const v=cur.vars[cur.key];
  const w=v?v.w:cur.nw||4,h=v?v.h:cur.nh||3,W=S.clientWidth,H=S.clientHeight;
  const one=(el,ww)=>{const k=Math.min(ww/w,H/h);el.style.width=Math.max(1,Math.floor(w*k))+'px';el.style.height=Math.max(1,Math.floor(h*k))+'px'};
- one($('cmp'),W);one($('s0'),W);one($('s1'),(W-12)/2);one($('s2'),(W-12)/2)}
+ one($('cmp'),W);one($('s0'),W);
+ if(cur.mask){const k=Math.min(W/cur.mask.width,H/cur.mask.height);$('s3').style.width=Math.max(1,Math.floor(cur.mask.width*k))+'px';$('s3').style.height=Math.max(1,Math.floor(cur.mask.height*k))+'px';zoomApply()}one($('s1'),(W-12)/2);one($('s2'),(W-12)/2)}
 new ResizeObserver(fit).observe($('stage'));
 function progress(it){if(it!==cur||!it.job)return;$('ot').textContent=`Делаю «${label(it.job.k)}»… ${it.job.pct?it.job.pct+'%':''}`;
  const b=$('ob');b.classList.toggle('wait',!it.job.pct);b.firstChild.style.width=it.job.pct?it.job.pct+'%':'';stripBar(it)}
 function render(){
  const has=items.length;$('drop').classList.toggle('small',has>0);
- const fresh=items.filter(i=>!Object.keys(i.vars).length&&!i.job&&!queue.some(q=>q.it===i)).length;$('go').disabled=!fresh;
+ const fresh=items.filter(i=>!Object.keys(i.vars).length&&!i.job&&!queue.some(q=>q.it===i)).length;$('go').disabled=!fresh&&!curNew();
+ if(cur&&$('nobg').checked&&!cur.mask&&!cur.maskBusy&&!cur.maskErr)loadMask(cur);
  $('go').textContent=fresh>1?`Улучшить ${fresh} ${fresh%10>=2&&fresh%10<=4&&(fresh%100<10||fresh%100>=20)?'изображения':'изображений'}`:'Улучшить';
  if(cur&&!items.includes(cur))cur=null;
  $('empty').hidden=!!cur;$('vt').hidden=$('stage').hidden=!cur;
@@ -305,16 +365,19 @@ function render(){
   $('save').disabled=!v||!!v.saved;$('save').lastChild.textContent=v&&v.saved?'Сохранено':'Сохранить';
   $('showf').hidden=!(v&&v.saved);$('saveall').hidden=items.filter(i=>i.key&&!i.vars[i.key].saved).length<2;
   $('mode').hidden=!v;
-  $('cmp').hidden=!v||mode!=='wipe';$('s1').hidden=$('s2').hidden=!v||mode!=='side';$('s0').hidden=!!v;
+  const pv=$('nobg').checked&&!!cur.mask&&(!cur.vars[key()]||!!cur.editing);  /* «Убрать фон»: the picture without it, before improving; the brush works here */
+  $('cmp').hidden=pv||!v||mode!=='wipe';$('s1').hidden=$('s2').hidden=pv||!v||mode!=='side';$('s0').hidden=pv||!!v;$('s3').hidden=!pv;
+  if(pv){$('mode').hidden=true;$('save').disabled=true;drawPv();if(zFor!==cur){zFor=cur;zoomReset()}histBtns()}
   if(v){if($('vb').dataset.src!==v.out){$('vb').src=$('sb').src=$('vb').dataset.src=v.out}
-   if($('va').dataset.src!==cur.url){$('va').src=$('sa').src=$('va').dataset.src=cur.url;place(50)}}
+   const bu=v.before||cur.url;if($('va').dataset.src!==bu){$('va').src=$('sa').src=$('va').dataset.src=bu;place(50)}}
   else if($('so').dataset.src!==cur.url){$('so').src=$('so').dataset.src=cur.url}
   if(!v&&!cur.nw){const im=new Image();im.onload=()=>{cur.nw=im.naturalWidth;cur.nh=im.naturalHeight;fit()};im.src=cur.url}
   const job=cur.job,waiting=queue.some(q=>q.it===cur);
-  $('over').hidden=!(job||waiting||(!v&&cur.err)||!v);
-  if(job){progress(cur)}else if(waiting){$('ot').textContent='В очереди — сначала доделаю другое';$('ob').classList.add('wait')}
+  const mb=$('nobg').checked&&cur.maskBusy;
+  $('over').hidden=!(job||waiting||mb||(!v&&cur.err)||(!v&&!pv))||(pv&&!job&&!waiting);
+  if(job){progress(cur)}else if(mb){$('ot').textContent='Убираю фон…';$('ob').classList.add('wait')}else if(waiting){$('ot').textContent='В очереди — сначала доделаю другое';$('ob').classList.add('wait')}
   else if(!v){$('ot').textContent=cur.err||'Выбери настройки слева и нажми «Улучшить»';$('ob').hidden=true}
-  $('ob').hidden=!(job||waiting);
+  $('ob').hidden=!(job||waiting||mb);
   /* the variants of this picture */
   const V=$('vars'),ks=Object.keys(cur.vars);V.hidden=!ks.length&&!job;V.innerHTML='';
   if(ks.length||job){V.append('Варианты:');
@@ -328,7 +391,7 @@ function render(){
   const v=it.vars[it.key];d.innerHTML=`<img alt=""><button class="x" title="Убрать">${svg('x')}</button>`;
   const im=d.querySelector('img');im.src=it.url;d.title=it.f.name;
   if(v){im.draggable=true;im.title='Перетащи в папку или в другую программу';
-   im.ondragstart=e=>{e.dataTransfer.setData('DownloadURL',`image/png:${it.f.name.replace(/\.[^.]+$/,'')} ×${v.scale}.png:${location.origin}/t/${v.path.split(/[\\/]/).pop()}`)}}
+   im.ondragstart=e=>{e.dataTransfer.setData('DownloadURL',`image/png:${it.f.name.replace(/\.[^.]+$/,'')} ×${v.scale}${v.bg?' без фона':''}.png:${location.origin}/t/${v.path.split(/[\\/]/).pop()}`)}}
   const b=document.createElement('span');
   if(it.job){b.className='b';b.textContent=it.job.pct?it.job.pct+'%':'…'}
   else if(queue.some(q=>q.it===it)){b.className='b';b.textContent='ждёт'}
@@ -341,6 +404,140 @@ function render(){
    queue=queue.filter(q=>q.it!==it);items=items.filter(i=>i!==it);if(cur===it)cur=items[0]||null;render()};
   T.append(d)})}
 function stripBar(it){if(it.pbEl)it.pbEl.style.width=(it.job&&it.job.pct||0)+'%';const b=it.pbEl&&it.pbEl.parentNode.previousElementSibling;if(b&&b.classList.contains('b')&&it.job)b.textContent=it.job.pct?it.job.pct+'%':'…'}
+/* «Убрать фон»: the net makes the mask at once; it is kept as a canvas whose alpha is the mask.
+   While fixing (it.editing) the removed part stays faintly visible, tinted red; «Применить» shows it clean */
+$('nobg').onchange=()=>{const on=$('nobg').checked;$('tools').hidden=!on;
+ if(!on&&cur&&Object.keys(cur.vars).length){const k=key();queue=queue.filter(q=>q.it!==cur);if(cur.vars[k])cur.key=k;else enqueue(cur,k)}render()};
+const toAlpha=bm=>{const c=document.createElement('canvas');c.width=bm.width;c.height=bm.height;const x=c.getContext('2d');x.drawImage(bm,0,0);
+ const d=x.getImageData(0,0,c.width,c.height),p=d.data;for(let i=0;i<p.length;i+=4){p[i+3]=p[i];p[i]=p[i+1]=p[i+2]=255}x.putImageData(d,0,0);return c};
+async function loadMask(it){it.maskBusy=true;
+ try{const r=await fetch('/mask',{method:'POST',body:it.f});if(!r.ok)throw new Error(await r.text());
+  const c=toAlpha(await createImageBitmap(await r.blob()));
+  const im=new Image();im.src=it.url;await im.decode();it.img=im;it.mask=c;it.maskVer=0;it.editing=true}
+ catch(e){it.maskErr=nice(e.message);if(it===cur)flash(it.maskErr)}
+ it.maskBusy=false;render()}
+const soft=()=>+$('soft').value;
+const cv=(w,h)=>{const c=document.createElement('canvas');c.width=w;c.height=h;return c};
+function drawPv(){const it=cur;if(!it||!it.mask)return;const c=$('pv'),m=it.mask,W=m.width,H=m.height;
+ if(c.width!==W||c.height!==H){c.width=W;c.height=H}
+ const x=c.getContext('2d');x.globalCompositeOperation='source-over';x.globalAlpha=1;x.clearRect(0,0,W,H);
+ if(it.editing){x.globalAlpha=.3;x.drawImage(it.img,0,0,W,H);x.globalAlpha=.3;x.globalCompositeOperation='source-atop';x.fillStyle='#ff2d2d';x.fillRect(0,0,W,H);x.globalAlpha=1;x.globalCompositeOperation='source-over'}
+ const t=drawPv.t||(drawPv.t=cv(1,1));t.width=W;t.height=H;const y=t.getContext('2d');
+ y.filter=soft()?`blur(${soft()}px)`:'none';y.drawImage(m,0,0);y.filter='none';y.globalCompositeOperation='source-in';y.drawImage(it.img,0,0,W,H);y.globalCompositeOperation='source-over';
+ x.drawImage(t,0,0);
+ if(lasso&&lasso.length>1){x.lineWidth=Math.max(2,W/400);x.setLineDash([x.lineWidth*4,x.lineWidth*3]);x.strokeStyle=lasso.m==='add'?'#fff':'#ff5a5a';x.beginPath();lasso.forEach((p,i)=>i?x.lineTo(...p):x.moveTo(...p));x.stroke();x.setLineDash([])}}
+const redraw=()=>{if(!redraw.f)redraw.f=requestAnimationFrame(()=>{redraw.f=0;drawPv()})};
+/* the mask changed: the next «Улучшить» makes a new variant (✎1, ✎2…) */
+const touched=it=>{if(!it.dirty){it.dirty=true;it.maskVer=(it.maskVer||0)+1}};
+/* tools: brush (brings the picture back), eraser (takes it away); lasso and the smart pick bring back or take away at once,
+   as the switch «+ −» says (⌥/Alt held: the other way, as in Photoshop) */
+let tool=null,paint=null,lasso=null,selMode='cut',alt=false;
+const smode=()=>(selMode==='add')!==alt?'add':'cut';
+const showMode=()=>{const m=smode();[...$('smode').children].forEach(x=>x.classList.toggle('on',x.dataset.v===m));const s=tool==='lasso'||tool==='smart';$('mrow').hidden=!s;$('brow').hidden=s};
+let space=false,pan=null,zm=1,zx=0,zy=0,zFor=null;
+const curs=()=>{$('pv').style.cursor=pan?'grabbing':space||(!tool&&zm>1)?'grab':tool==='brush'||tool==='eraser'?'none':tool?'crosshair':''};
+const setTool=t=>{tool=t;[...$('tool').children].forEach(x=>x.classList.toggle('on',x.dataset.v===tool));curs();showMode();
+ if(t&&cur&&cur.mask)cur.editing=true};
+$('tool').onclick=e=>{const b=e.target.closest('button');if(!b)return;setTool(tool===b.dataset.v?null:b.dataset.v);render()};
+$('smode').onclick=e=>{const b=e.target.closest('button');if(b){selMode=b.dataset.v;showMode()}};
+$('apply').onclick=()=>{if(!cur)return;cur.editing=false;setTool(null);render()};
+$('soft').oninput=()=>{if(cur&&cur.mask)redraw()};$('soft').onchange=()=>{if(cur&&cur.mask){remember(cur,softWas);touched(cur);render()}softWas=soft()};
+const ringAt=e=>{const R=$('ring'),r=$('s3').getBoundingClientRect(),d=+$('bsize').value;R.hidden=space||!!pan||tool!=='brush'&&tool!=='eraser';
+ R.style.width=R.style.height=d+'px';R.style.left=(e.clientX-r.left)+'px';R.style.top=(e.clientY-r.top)+'px'};
+const at=e=>{const r=$('pv').getBoundingClientRect(),k=cur.mask.width/r.width;return[(e.clientX-r.left)*k,(e.clientY-r.top)*k]};
+function dab(e){const x=cur.mask.getContext('2d'),p=at(e),k=cur.mask.width/$('pv').getBoundingClientRect().width;
+ x.globalCompositeOperation=tool==='eraser'?'destination-out':'source-over';x.strokeStyle='#fff';
+ x.lineWidth=+$('bsize').value*k;x.lineCap=x.lineJoin='round';x.beginPath();
+ if(paint){x.moveTo(...paint);x.lineTo(...p);x.stroke()}else{x.fillStyle='#fff';x.arc(...p,x.lineWidth/2,0,7);x.fill()}  /* a single click leaves a dot */
+
+ paint=p;redraw()}
+/* a shape (white = in it) goes into the mask: brought back or taken away */
+function put(it,c,m){remember(it);const x=it.mask.getContext('2d');x.globalCompositeOperation=m==='add'?'source-over':'destination-out';x.drawImage(c,0,0);x.globalCompositeOperation='source-over';touched(it);render()}
+async function smartPick(e){const it=cur,[px,py]=at(e),W=it.mask.width,H=it.mask.height,m=(selMode==='add')!==e.altKey?'add':'cut';$('pv').style.cursor='progress';
+ const go=body=>fetch(`/select?id=${it.sid}&x=${px/W}&y=${py/H}&w=${W}&h=${H}`,{method:'POST',body});
+ try{if(!it.sid)it.sid=Math.random().toString(36).slice(2);let r=await go(it.sent?'':it.f);if(r.status===409)r=await go(it.f);
+  if(!r.ok)throw new Error(await r.text());it.sent=true;const c=toAlpha(await createImageBitmap(await r.blob()));if(it.mask&&it.mask.width===W)put(it,c,m)}
+ catch(er){flash(nice(er.message))}
+ curs()}
+$('pv').onpointerdown=e=>{if(!cur||!cur.mask)return;
+ if(space||e.button===1||(!tool&&zm>1)){e.preventDefault();pan=[e.clientX,e.clientY];$('pv').setPointerCapture(e.pointerId);$('ring').hidden=true;return curs()}
+ if(!tool||e.button)return;
+ if(tool==='smart')return smartPick(e);
+ $('pv').setPointerCapture(e.pointerId);
+ if(tool==='lasso'){lasso=[at(e)];lasso.m=(selMode==='add')!==e.altKey?'add':'cut';return redraw()}
+ paint=null;remember(cur);dab(e)};
+$('pv').onpointermove=e=>{if(pan){zx+=e.clientX-pan[0];zy+=e.clientY-pan[1];pan=[e.clientX,e.clientY];return zoomApply()}ringAt(e);if(lasso){lasso.push(at(e));redraw()}else if(paint)dab(e)};
+$('pv').onpointerleave=()=>{$('ring').hidden=true};
+$('pv').onpointerup=$('pv').onpointercancel=()=>{if(pan){pan=null;return curs()}
+ if(lasso){const L=lasso;lasso=null;if(L.length>2){const c=cv(cur.mask.width,cur.mask.height),y=c.getContext('2d');y.fillStyle='#fff';y.beginPath();L.forEach((p,i)=>i?y.lineTo(...p):y.moveTo(...p));y.closePath();y.fill();put(cur,c,L.m)}return redraw()}
+ if(!paint)return;paint=null;touched(cur);render()};
+/* undo / redo: a copy of the mask (and «мягкие края») before every change, 30 steps back, for each picture */
+let softWas=soft();
+const snap=(it,sf=soft())=>{const c=cv(it.mask.width,it.mask.height);c.getContext('2d').drawImage(it.mask,0,0);return{c,sf}};
+function remember(it,sf){if(!it.undo){it.undo=[];it.redo=[]}it.undo.push(snap(it,sf));if(it.undo.length>30)it.undo.shift();it.redo=[];histBtns()}
+function histBtns(){const h=$('hist').children,u=cur&&cur.undo;h[0].disabled=!(u&&u.length);h[1].disabled=!(u&&cur.redo.length)}
+function stepBack(redo){const it=cur;if(!it||!it.mask||!it.undo||paint||lasso)return;const from=redo?it.redo:it.undo,to=redo?it.undo:it.redo,s=from.pop();if(!s)return;
+ to.push(snap(it));const x=it.mask.getContext('2d');x.globalCompositeOperation='copy';x.drawImage(s.c,0,0);x.globalCompositeOperation='source-over';
+ $('soft').value=softWas=s.sf;it.editing=true;touched(it);render()}
+$('hist').onclick=e=>{const b=e.target.closest('button');if(b)stepBack(b.dataset.v==='redo')};
+/* zoom while fixing: the picture is scaled inside its frame; the brush stays the size of the circle on screen */
+const zoomApply=()=>{const B=$('s3'),w=B.clientWidth,h=B.clientHeight;zm=Math.min(16,Math.max(1,zm));
+ zx=Math.min(0,Math.max(w-w*zm,zx));zy=Math.min(0,Math.max(h-h*zm,zy));
+ $('pv').style.transform=zm>1?`translate(${zx}px,${zy}px) scale(${zm})`:'';$('zl').textContent=Math.round(zm*100)+'%';curs()};
+const zoomAt=(f,cx,cy)=>{const B=$('s3');if(cx==null){cx=B.clientWidth/2;cy=B.clientHeight/2}const n=Math.min(16,Math.max(1,zm*f));
+ zx=cx-(cx-zx)*n/zm;zy=cy-(cy-zy)*n/zm;zm=n;zoomApply()};
+const zoomReset=()=>{zm=1;zx=zy=0;zoomApply()};
+$('zbar').onclick=e=>{const b=e.target.closest('button');if(!b)return;b.dataset.z==='0'?zoomReset():zoomAt(b.dataset.z==='+'?1.5:1/1.5)};
+$('zbar').onpointerdown=e=>e.stopPropagation();
+$('s3').addEventListener('wheel',e=>{e.preventDefault();const r=$('s3').getBoundingClientRect();
+ if(e.ctrlKey||e.metaKey||e.altKey)zoomAt(Math.exp(-e.deltaY*(e.deltaMode?0.05:0.01)),e.clientX-r.left,e.clientY-r.top);
+ else if(zm>1){zx-=e.deltaX;zy-=e.deltaY;zoomApply()}},{passive:false});
+/* Safari engine (the Mac window): a trackpad pinch comes as gesture events */
+let gs=1;$('s3').addEventListener('gesturestart',e=>{e.preventDefault();gs=1});
+$('s3').addEventListener('gesturechange',e=>{e.preventDefault();const r=$('s3').getBoundingClientRect();zoomAt(e.scale/gs,e.clientX-r.left,e.clientY-r.top);gs=e.scale});
+/* hot keys: shown and changed in ⚙ Settings; kept in this browser (localStorage). "mod" = ⌘ on the Mac, Ctrl on Windows */
+const KEYS=[['undo','Отменить','mod+KeyZ'],['redo','Повторить','mod+shift+KeyZ'],['brush','Кисть','KeyB'],['eraser','Ластик','KeyE'],['lasso','Лассо','KeyL'],
+ ['smart','Умное выделение','KeyW'],['swap','Вернуть ↔ убрать (лассо, выделение)','KeyX'],['smaller','Кисть меньше','BracketLeft'],['bigger','Кисть больше','BracketRight'],
+ ['zin','Приблизить','mod+Equal'],['zout','Отдалить','mod+Minus'],['zfit','Вписать целиком','mod+Digit0']];
+let kb={};const kbLoad=()=>{let o={};try{o=JSON.parse(localStorage.getItem('keys')||'{}')}catch(e){}KEYS.forEach(([a,,d])=>kb[a]=a in o?o[a]:d)};kbLoad();
+const kbSave=()=>{try{localStorage.setItem('keys',JSON.stringify(kb))}catch(e){}};
+const MODS=['MetaLeft','MetaRight','ControlLeft','ControlRight','ShiftLeft','ShiftRight','AltLeft','AltRight','CapsLock','Fn'];
+const NUM={NumpadAdd:'Equal',NumpadSubtract:'Minus',Numpad0:'Digit0'};
+const combo=e=>[(MAC?e.metaKey:e.ctrlKey)&&'mod',e.shiftKey&&'shift',e.altKey&&'alt',NUM[e.code]||e.code].filter(Boolean).join('+');
+const KN={Equal:'+',Minus:'−',BracketLeft:'[',BracketRight:']',Space:'Пробел',Enter:MAC?'↩':'Enter',Backspace:MAC?'⌫':'Backspace',Delete:'Delete',Escape:'Esc',
+ ArrowUp:'↑',ArrowDown:'↓',ArrowLeft:'←',ArrowRight:'→',Comma:',',Period:'.',Slash:'/',Backslash:'\\',Semicolon:';',Quote:"'",Backquote:'`',Tab:'Tab'};
+const kname=c=>{if(!c)return'—';return c.split('+').map(p=>p==='mod'?(MAC?'⌘':'Ctrl'):p==='shift'?(MAC?'⇧':'Shift'):p==='alt'?(MAC?'⌥':'Alt'):
+ KN[p]||p.replace(/^Key|^Digit|^Numpad/,'')).join(MAC?'':'+')};
+const kt=a=>kb[a]?` (${kname(kb[a])})`:'';
+/* the hints on the buttons follow the keys */
+function kTitles(){const t=$('tool').children;t[0].title='Кисть: вернуть'+kt('brush');t[1].title='Ластик: убрать'+kt('eraser');t[2].title='Лассо: обведи'+kt('lasso');
+ t[3].title='Умное выделение: нажми на предмет'+kt('smart');$('hist').children[0].title='Отменить'+kt('undo');$('hist').children[1].title='Повторить'+kt('redo');
+ $('smode').children[0].title='Вернуть обведённое'+kt('swap');$('smode').children[1].title=`Убрать обведённое${kt('swap')}. Держи ${MAC?'⌥':'Alt'} — наоборот`;
+ $('zbar').children[0].title='Отдалить'+kt('zout');$('zbar').children[1].title='Вписать целиком'+kt('zfit');
+ $('zbar').children[2].title=`Приблизить${kt('zin')}. Ещё: щипок на тачпаде или ${MAC?'⌘':'Ctrl'} + колёсико. Двигать: пробел + тяни`}
+kTitles();
+const ready=()=>$('dlg').hidden&&!$('tools').hidden&&cur&&cur.mask;
+const onPic=()=>ready()&&!$('s3').hidden;
+const DO={undo:()=>stepBack(false),redo:()=>stepBack(true),brush:()=>pick('brush'),eraser:()=>pick('eraser'),lasso:()=>pick('lasso'),smart:()=>pick('smart'),
+ swap:()=>{selMode=selMode==='add'?'cut':'add';showMode()},smaller:()=>size(-1),bigger:()=>size(1),
+ zin:()=>onPic()&&zoomAt(1.5),zout:()=>onPic()&&zoomAt(1/1.5),zfit:()=>onPic()&&zoomReset()};
+const pick=t=>{setTool(t);render()};
+const size=d=>{const b=$('bsize'),v=+b.value;b.value=Math.max(4,Math.min(150,Math.round(v+d*Math.max(2,v*.15))));const R=$('ring');if(!R.hidden){R.style.width=R.style.height=b.value+'px'}};
+let rec=null;  /* Settings: waiting for the new key of this action */
+document.addEventListener('keydown',e=>{
+ if(rec){e.preventDefault();e.stopPropagation();if(MODS.includes(e.code))return;if(e.code!=='Escape'){const c=combo(e);KEYS.forEach(([a])=>{if(kb[a]===c)kb[a]=''});kb[rec]=c;kbSave();kTitles()}rec=null;return kList()}
+ if(e.code==='Escape'&&!$('dlg').hidden&&!dFirst){e.preventDefault();return dClose()}
+ if(e.key==='Alt'&&!alt){alt=true;showMode()}
+ if(!ready()||e.target.matches&&e.target.matches('input:not([type=range]):not([type=checkbox]),textarea'))return;
+ if(e.code==='Space'&&!e.metaKey&&!e.ctrlKey){if(!onPic())return;e.preventDefault();if(!space){space=true;$('ring').hidden=true;curs()}return}
+ const c=combo(e),a=KEYS.find(([k])=>kb[k]===c);if(!a||e.repeat&&a[0]!=='smaller'&&a[0]!=='bigger')return;e.preventDefault();DO[a[0]]()},true);
+document.addEventListener('keyup',e=>{if(e.key==='Alt'&&alt){alt=false;showMode()}if(e.code==='Space'&&space){space=false;curs();if(onPic())e.preventDefault()}});
+window.addEventListener('blur',()=>{if(space){space=false;curs()}if(alt){alt=false;showMode()}});
+function kList(){const L=$('klist');L.textContent='';KEYS.forEach(([a,n])=>{const r=document.createElement('div');r.className='krow';const t=document.createElement('span');t.textContent=n;
+  const b=document.createElement('button');b.textContent=rec===a?'Нажми…':kname(kb[a]);b.classList.toggle('rec',rec===a);b.title='Нажми и потом нажми новые клавиши. Esc — отмена';
+  b.onclick=()=>{rec=rec===a?null:a;kList()};r.append(t,b);L.append(r)});
+ $('kfix').textContent=`Ещё: пробел + тяни — двигать картинку; держи ${MAC?'⌥':'Alt'} — лассо и выделение наоборот; щипок или ${MAC?'⌘':'Ctrl'} + колёсико — приблизить.`}
+$('kreset').onclick=()=>{try{localStorage.removeItem('keys')}catch(e){}kb={};kbLoad();rec=null;kTitles();kList()};
 /* «шторка»: moves only while the button is held */
 let drag=false;const mv=e=>{const r=$('cmp').getBoundingClientRect();place(Math.min(100,Math.max(0,(e.clientX-r.left)/r.width*100)))};
 $('cmp').onpointerdown=e=>{drag=true;$('cmp').classList.add('drag');$('cmp').setPointerCapture(e.pointerId);mv(e)};
@@ -355,11 +552,19 @@ $('upd').onclick=async()=>{const b=$('upd');b.disabled=true;$('updt').textConten
  b.disabled=false;$('updt').textContent='Обновить'};
 /* the folder for the results: on the first start the program asks; ⚙ — change it any time */
 let folder={};
-const showDlg=first=>{$('dh').textContent=first?'Куда сохранять готовое?':'Настройки';$('dlab').hidden=first;$('dn').hidden=!first;
- $('dpick').textContent=first?'Выбрать другую папку…':'Изменить…';$('dok').textContent=first?'Оставить':'Готово';$('dp').textContent=folder.pretty||'';$('dlg').hidden=false};
-const setFolder=f=>{folder=f;$('dp').textContent=f.pretty};
+/* ⚙ Settings: a menu (the folder, the hot keys), each opens its page; the first start asks only the folder */
+let dFirst=false;
+const dPage=p=>{rec=null;['dmenu','pfold','keys'].forEach(i=>$(i).hidden=i!==p);$('dback').hidden=dFirst||p==='dmenu';
+ $('dh').textContent=dFirst?'Куда сохранять готовое?':{dmenu:'Настройки',pfold:'Папка для сохранения',keys:'Горячие клавиши'}[p];
+ if(p==='keys')kList();$('mfold').textContent=folder.pretty||''};
+const showDlg=first=>{dFirst=first;$('dx').hidden=first;$('dn').hidden=!first;
+ $('dpick').textContent=first?'Выбрать другую папку…':'Изменить…';$('dok').textContent=first?'Оставить':'Готово';$('dp').textContent=folder.pretty||'';dPage(first?'pfold':'dmenu');$('dlg').hidden=false};
+$('dmenu').onclick=e=>{const b=e.target.closest('.mi');if(b)dPage(b.dataset.p)};
+$('dback').onclick=()=>dPage('dmenu');
+const setFolder=f=>{folder=f;$('dp').textContent=$('mfold').textContent=f.pretty||''};
 fetch('/folder').then(r=>r.json()).then(f=>{setFolder(f);if(!f.asked)showDlg(true)}).catch(()=>{});
 $('gear').onclick=()=>fetch('/folder').then(r=>r.json()).then(f=>{setFolder(f);showDlg(false)}).catch(()=>{});
 $('dpick').onclick=async()=>{const b=$('dpick');b.disabled=true;try{const f=await(await fetch('/folder/pick')).json();setFolder(f);if(f.asked)$('dok').textContent='Готово'}catch(e){}b.disabled=false};
-$('dok').onclick=async()=>{try{setFolder(await(await fetch('/folder/keep')).json())}catch(e){}$('dlg').hidden=true};
+const dClose=async()=>{rec=null;$('dlg').hidden=true;try{setFolder(await(await fetch('/folder/keep')).json())}catch(e){}};
+$('dok').onclick=$('dx').onclick=$('kok').onclick=dClose;
 </script></body></html>

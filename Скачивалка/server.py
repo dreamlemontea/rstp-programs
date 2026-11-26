@@ -575,6 +575,7 @@ class H(BaseHTTPRequestHandler):
 
 def window(url):
     """Its own window, like a normal program (pywebview). False if it can't be shown."""
+    shown, closed = threading.Event(), threading.Event()
     try:
         if WIN:
             import ctypes
@@ -595,6 +596,8 @@ def window(url):
               "cocoa.menu.selectAll": "Выбрать всё"}
         dark = dark_os()
         w = webview.create_window("Скачивалка", url, width=860, height=720, min_size=(480, 560), background_color="#0b0b0f" if dark else "#f4f1ec")
+        w.events.shown += lambda: shown.set()
+        w.events.closed += lambda: closed.set()
         if WIN:
             w.events.shown += lambda: win_icon("Скачивалка", os.path.join(HERE, "значок", "icon.ico"))
         else:
@@ -606,6 +609,10 @@ def window(url):
         webview.start(localization=ru, private_mode=False, storage_path=os.path.join(HERE, "webview") if WIN else None)
         return True
     except Exception as e:  # noqa: BLE001
+        if shown.is_set():  # the window is up after all (seen on Windows, first start): no browser on top of it
+            print("Ошибка окна, но оно открыто:", e, flush=True)
+            closed.wait()
+            return True
         print("Окно не открылось, открываю в браузере:", e, flush=True)
         return False
 

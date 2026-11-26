@@ -1,7 +1,7 @@
 {
- "version": "1.0.1",
- "tag": "v1.0.1",
- "notes": "Новая Улучшалка (варианты, шторка/рядом), выбор папки, вес на кнопке Скачивалки",
+ "version": "1.0.2",
+ "tag": "v1.0.2",
+ "notes": "Windows: при первом запуске больше не открывается лишний браузер",
  "pip": [
   {
    "import": "PIL",
@@ -22,19 +22,23 @@
   {
    "import": "webview",
    "pkg": "pywebview"
+  },
+  {
+   "import": "onnxruntime",
+   "pkg": "onnxruntime"
   }
  ],
  "files": {
   "Скачивалка/index.html": "e2346c220d1d3d8aad6d439e18f494f26d8699813ec53ca2ebcdda2e4709c1e4",
-  "Скачивалка/server.py": "2e24367cfa7f3a6e18f031a6d80bdab88b3b2a5d4762bc643e9238ae5ef56bea",
+  "Скачивалка/server.py": "25e6371b2ce745a83abad5a3d2b889f80e3f2ca4c887995db0b2fa49de903142",
   "Скачивалка/updater.py": "7225db6f27259a08f3a3583646d96d55dfb36ffab7186e968043906db3364a09",
   "Скачивалка/значок/icon-256.png": "c35a74433ba4625c948ac20be3cda188ea3dd4d2427789d339b59e25955def12",
   "Скачивалка/значок/icon.icns": "25224def0d425b5b373e9f7867042bff0c25b36d9ae6e390fddd5b877a582e99",
   "Скачивалка/значок/icon.ico": "560e1a96c86e2d8ed3244ce3c6288e4a58b193fff7633e46420065f75721431b",
   "Скачивалка/значок/rstp-logo-dark.png": "b9f8de5d4279c6effb0098f945d1377d72546b49c3f6f66495542527336a5b76",
   "Скачивалка/значок/rstp-logo.png": "d6bf2eb71843b06bd52787793a4380ef41a8659bae2dba79a674dae7cb7e7693",
-  "Улучшалка/index.html": "82f0102b37a3304307d03b80e8f29a6a7351b43eb3a02bbb15bc14a48aa7b0de",
-  "Улучшалка/server.py": "427ca5b700bf91c3a35a38b9bd712e57fafa35a034fb1fbf21a152a66e6b64d2",
+  "Улучшалка/index.html": "f7188f383f533eab37de3b4602918af31553bd1310bd537318b0d543cca2fcd5",
+  "Улучшалка/server.py": "798f8619571a2123b3eae0965b5cfc4d9a06ef75ec601761369f5cbec137965c",
   "Улучшалка/updater.py": "7225db6f27259a08f3a3583646d96d55dfb36ffab7186e968043906db3364a09",
   "Улучшалка/значок/icon-256.png": "446bcd4c6e4fcaa851538e199d7916d3722b9c24b4f6753f434cace13f8d314e",
   "Улучшалка/значок/icon.icns": "e6dcb0b9ec99649df508a693fc3e3fae464ce16754834bb3f3aa471d18de9d55",
