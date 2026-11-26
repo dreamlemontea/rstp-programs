@@ -109,11 +109,14 @@ def run():
         for tmp, dst in got:
             os.replace(tmp, dst)
         # new libraries, if the new version needs them
-        for p in m.get("pip", []):
+        # only inside the programs' own .venv (never into a system Python); a failure here doesn't undo the update
+        for p in m.get("pip", []) if sys.prefix != sys.base_prefix else []:
             try:
                 __import__(p["import"])
             except ImportError:
-                subprocess.run([_python(), "-m", "pip", "install", "-q", "--prefer-binary", p["pkg"]], check=True, timeout=1800, **NOWIN)
+                r = subprocess.run([_python(), "-m", "pip", "install", "-q", "--prefer-binary", p["pkg"]], capture_output=True, text=True, timeout=1800, **NOWIN)
+                if r.returncode:
+                    print("pip failed:", p["pkg"], r.stderr[-500:], flush=True)
         for top in {rel.split("/")[0] for rel in m["files"]}:
             if os.path.isdir(os.path.join(ROOT, top)):
                 open(os.path.join(ROOT, top, "version.txt"), "w", encoding="utf-8").write(m["version"] + "\n")

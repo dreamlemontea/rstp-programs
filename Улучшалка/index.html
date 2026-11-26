@@ -108,7 +108,9 @@ h2{margin:0;font-size:15px;font-weight:700}
 .vt .n{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:700}
 .vt .hint{flex:none}
 @media(max-width:520px){.page{padding:16px 16px 24px}.tag{display:none}.modes button{font-size:14px}}
+.ver{position:fixed;right:12px;bottom:8px;font-size:11px;color:var(--muted);opacity:.55;pointer-events:none;user-select:none}
 </style></head><body>
+<div class="ver" id="ver"></div>
 <div class="page">
 <header>
  <div class="logo"><span class="acc">у</span>лучшалка<span class="acc">.</span></div>
@@ -245,6 +247,7 @@ $('go').onclick=async()=>{if(busy)return;busy=true;render();
  busy=false;render()};
 render();
 /* a new version of the program on GitHub: the orange «Обновить» button appears */
+fetch('/appver').then(r=>r.json()).then(a=>{if(a.v&&a.v!=='0')$('ver').textContent='v'+a.v}).catch(()=>{});
 fetch('/appcheck').then(r=>r.json()).then(a=>{if(!a.new)return;const b=$('upd');b.hidden=false;b.title=`Есть новая версия Улучшалки: ${a.latest} (сейчас ${a.version}). Нажми, чтобы обновить`}).catch(()=>{});
 $('upd').onclick=async()=>{const b=$('upd');b.disabled=true;$('updt').textContent='Обновляю…';
  try{const r=await(await fetch('/appupdate')).json();flash(r.msg);if(r.ok){b.classList.remove('new');b.title=r.msg}}catch(e){flash('Не получилось обновить. Проверь интернет')}

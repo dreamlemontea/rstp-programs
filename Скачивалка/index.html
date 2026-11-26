@@ -106,7 +106,9 @@ h2{margin:0;font-size:15px;font-weight:700}
 .empty{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:8px;min-height:220px;color:var(--muted)}
 .empty svg{width:44px;height:44px;opacity:.5}
 @media(max-width:520px){.page{padding:16px 16px 24px}.tag{display:none}}
+.ver{position:fixed;right:12px;bottom:8px;font-size:11px;color:var(--muted);opacity:.55;pointer-events:none;user-select:none}
 </style></head><body>
+<div class="ver" id="ver"></div>
 <div class="page">
 <header>
  <div class="logo"><span class="acc">с</span>качивалка<span class="acc">.</span></div>
@@ -244,7 +246,12 @@ $('openf').onclick=()=>fetch('/open');
 const vdate=v=>{const m=/^(\d{4})\.(\d{2})\.(\d{2})/.exec(v||'');return m?`${m[3]}.${m[2]}.${m[1]}`:v||'?'};
 function upd(r){const b=$('upd');if(!r||!r.v)return;const a=r.app||{},yt=!!r.latest&&r.latest!==r.v;b.classList.toggle('new',yt||!!a.new);
  b.title=(a.new?`Есть новая версия Скачивалки: ${a.latest} (сейчас ${a.version}). `:'')+(yt?`Есть новый yt-dlp от ${vdate(r.latest)} (сейчас от ${vdate(r.v)}). `:'')+(yt||a.new?'Нажми, чтобы обновить':`Скачивалка ${a.version||''}, yt-dlp от ${vdate(r.v)}`+(r.latest?' — всё самое свежее':''))}
-fetch('/check').then(r=>r.json()).then(upd).catch(()=>{});
+let checked=false;
+fetch('/check').then(r=>r.json()).then(r=>{checked=true;$('upd').disabled=false;$('updt').textContent='Обновить';upd(r)}).catch(()=>{checked=true});
+/* on start a newer yt-dlp is put in by itself: the button says so meanwhile */
+(async function busy(){if(checked)return;try{const r=await(await fetch('/busy')).json();if(checked)return;$('upd').disabled=r.on;$('updt').textContent=r.on?'Обновляю загрузчик…':'Обновить';if(r.on)$('upd').title='Вышел новый загрузчик (yt-dlp) — ставлю сам, минуту-две. Скачивание начнётся, как только он встанет'}catch(e){}setTimeout(busy,1500)})();
+fetch('/appver').then(r=>r.json()).then(a=>{if(a.v&&a.v!=='0')$('ver').textContent='v'+a.v}).catch(()=>{});
+
 $('upd').onclick=async()=>{const b=$('upd');b.disabled=true;$('updt').textContent='Обновляю…';
  try{const r=await(await fetch('/update')).json();flash(r.msg);if(!/^Не /.test(r.msg))upd({v:r.v,latest:r.v,app:r.app})}catch(e){flash('Не получилось обновить. Проверь интернет')}
  b.disabled=false;$('updt').textContent='Обновить'};

@@ -144,6 +144,8 @@ class H(BaseHTTPRequestHandler):
         if u.path == "/progress":
             d, t = progress.get(q.get("id", [""])[0], [0, 0])
             return self.send(json.dumps({"done": d, "total": t}).encode(), "application/json")
+        if u.path == "/appver":
+            return self.send(json.dumps({"v": updater.current()}).encode(), "application/json")
         if u.path == "/appcheck":  # on start: is a newer version of the program on GitHub?
             return self.send(json.dumps(updater.check(), ensure_ascii=False).encode(), "application/json")
         if u.path == "/appupdate":

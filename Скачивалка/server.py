@@ -34,6 +34,8 @@ TMP = os.path.join(HERE, "tmp")
 OUT = os.path.expanduser("~/Downloads")
 ENV = dict(os.environ, LANG="en_US.UTF-8", PYTHONIOENCODING="utf-8")
 jobs, jlock = {}, threading.Lock()
+ready = threading.Event()  # cleared while yt-dlp is being replaced: downloads wait for it
+ready.set()
 
 
 def node():
@@ -52,6 +54,7 @@ def node():
 
 
 def base_args():
+    ready.wait(600)
     a = [YTDLP, "--no-playlist", "--newline", "--no-colors", "--ffmpeg-location", BIN, "--no-mtime"]
     if WIN:
         a += ["--encoding", "utf-8"]  # Russian titles come through intact
@@ -150,22 +153,23 @@ def tc(s):
 def nice(err):
     e = err or ""
     rules = [
+        (r"vk\.(com|ru)/(audio|music)|/audio-?\d", "Музыку из ВК скачать нельзя — ВК её защищает. Видео и клипы из ВК скачиваются"),
         (r"Unsupported URL|is not a valid URL|No video formats", "Это не похоже на ссылку на видео. Скопируй ссылку из адресной строки"),
         (r"Private video", "Видео закрыто (приватное)"),
         (r"Video unavailable|video is unavailable|This video is not available|has been removed|account .* terminated", "Видео недоступно или удалено"),
         (r"confirm your age|age-restricted|inappropriate", "Видео с ограничением по возрасту — без входа в аккаунт не скачать"),
-        (r"not a bot|Sign in to confirm", "YouTube просит подтвердить, что ты не робот. Подожди немного или нажми «Обновить yt-dlp»"),
+        (r"not a bot|Sign in to confirm", "YouTube просит подтвердить, что ты не робот. Подожди немного или нажми «Обновить»"),
         (r"members-only|Join this channel", "Видео только для спонсоров канала"),
         (r"live event will begin|Premieres in|is_live|live stream", "Это трансляция или премьера — скачай, когда она закончится"),
         (r"getaddrinfo|Unable to download webpage|Connection|timed out|Network is unreachable|nodename nor servname", "Нет интернета или YouTube не отвечает. Проверь сеть и попробуй ещё раз"),
-        (r"HTTP Error 403|Requested format is not available|Signature|nsig|player", "YouTube что-то поменял. Нажми «Обновить yt-dlp» и попробуй ещё раз"),
+        (r"HTTP Error 403|Requested format is not available|Signature|nsig|player", "YouTube что-то поменял. Нажми «Обновить» и попробуй ещё раз"),
         (r"No space left", "Закончилось место на диске"),
         (r"ffmpeg|Postprocessing|Conversion failed", "Скачалось, но не получилось собрать файл. Попробуй ещё раз или без куска по времени"),
     ]
     for pat, msg in rules:
         if re.search(pat, e, re.I):
             return msg
-    return "Не получилось скачать. Попробуй ещё раз или нажми «Обновить yt-dlp»"
+    return "Не получилось скачать. Попробуй ещё раз или нажми «Обновить»"
 
 
 def run_job(j):
@@ -175,19 +179,23 @@ def run_job(j):
     name = "%(title).150B"
     if j["start"] is not None or j["end"] is not None:
         s, e = j["start"] or 0, j["end"]
-        a += ["--download-sections", f"*{s}-{e if e is not None else 'inf'}", "--force-keyframes-at-cuts"]
+        # "-f mp4": our ffmpeg can't write .m4a ("ipod"), mp4 is the same thing inside
+        a += ["--download-sections", f"*{s}-{e if e is not None else 'inf'}", "--force-keyframes-at-cuts",
+              "--downloader-args", "ffmpeg_o:-f mp4"]
         name += f" ({tc(s)}–{tc(e) if e is not None else 'конец'})"
     if j["mode"] == "audio":
-        # a piece is cut by our ffmpeg, which can't write .m4a: then the .webm sound is taken
+        # a piece: the plain https stream — from HLS (VK) ffmpeg can't cut out the middle, the piece comes out empty
         cut = j["start"] is not None or j["end"] is not None
-        a += ["-f", "ba[ext=webm]/ba" if cut else "ba[acodec^=mp4a]/ba/b", "-x", "--audio-format", j["fmt"]]
+        a += ["-f", "ba[acodec^=mp4a][protocol=https]/ba[ext=webm]/ba" if cut else "ba[acodec^=mp4a]/ba/b",
+              "-x", "--audio-format", j["fmt"]]
         if j["fmt"] == "mp3":
             a += ["--audio-quality", "320K"]
         j["parts"] = 1
     else:
         # highest resolution first; at the same size H.264 (opens everywhere, CapCut too); stereo sound
         # with a chosen size: that size or the nearest smaller one
-        a += ["-f", "bv*+ba[acodec^=mp4a][audio_channels<=2]/bv*+ba/b", "-S", f"res:{j['q']},fps,vcodec:h264" if j["q"] else "res,fps,vcodec:h264",
+        # "<=?": VK doesn't say how many channels; https sound first (a piece from VK's HLS sound is silent)
+        a += ["-f", "bv*+ba[acodec^=mp4a][audio_channels<=?2][protocol=https]/bv*+ba[acodec^=mp4a][audio_channels<=?2]/bv*+ba/b", "-S", f"res:{j['q']},fps,vcodec:h264" if j["q"] else "res,fps,vcodec:h264",
               "--merge-output-format", "mp4", "--remux-video", "mp4"]
         j["parts"] = 2
         if j["q"]:
@@ -198,7 +206,7 @@ def run_job(j):
         p = subprocess.Popen(a, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, env=ENV, bufsize=1,
                              encoding="utf-8", errors="replace", **NOWIN)
     except OSError as e:
-        j.update(state="err", log=str(e), error="Не найден yt-dlp. Нажми «Обновить yt-dlp»" if WIN
+        j.update(state="err", log=str(e), error="Не найден yt-dlp. Нажми «Обновить»" if WIN
                  else "Не найден yt-dlp. Пересобери программу (значок/build_app.sh)")
         return
     j["proc"], log, part = p, [], 0
@@ -271,6 +279,32 @@ def latest_tag():
 
 def update():
     """Fetches the newest official yt-dlp_macos.zip / yt-dlp_win.zip, checks its checksum and puts it in place of the old one."""
+    with ulock:
+        ready.clear()
+        try:
+            return _update()
+        finally:
+            ready.set()
+
+
+def auto_update():
+    """On start: a newer yt-dlp is put in by itself (YouTube changes often), quietly. Without internet — nothing."""
+    try:
+        latest = latest_tag()
+        if latest and (latest != version() or not YTDLP.startswith(APPDIR)):
+            auto["on"] = True  # the window shows «Обновляю загрузчик…» on the button
+            print("yt-dlp auto update:", update(), flush=True)
+    except Exception as e:  # noqa: BLE001
+        print("yt-dlp auto update failed:", e, flush=True)
+    finally:
+        auto["on"] = False
+        checked.set()
+
+
+ulock, checked, auto = threading.Lock(), threading.Event(), {"on": False}
+
+
+def _update():
     global YTDLP
     if any(j["state"] == "work" for j in jobs.values()):
         return "Сначала дождись, пока закончатся скачивания"
@@ -358,9 +392,14 @@ class H(BaseHTTPRequestHandler):
                                   "channel": i.get("channel") or i.get("uploader") or "", "heights": hs})
             except subprocess.TimeoutExpired:
                 return self.send({"error": "YouTube долго не отвечает. Попробуй ещё раз"})
+        if u.path == "/busy":  # the automatic yt-dlp update is going on
+            return self.send({"on": auto["on"]})
+        if u.path == "/appver":
+            return self.send({"v": updater.current()})
         if u.path == "/version":
             return self.send({"v": version()})
         if u.path == "/check":  # on start: is there a newer yt-dlp? a newer version of the program itself?
+            checked.wait(300)  # the automatic yt-dlp update goes first
             return self.send({"v": version(), "latest": latest_tag(), "app": updater.check()})
         if u.path == "/update":  # first the program (if a new version is out), then yt-dlp
             app = updater.check()
@@ -479,6 +518,7 @@ if __name__ == "__main__":
         srv = ThreadingHTTPServer(("127.0.0.1", 0), H)
     url = f"http://127.0.0.1:{srv.server_address[1]}"
     print(f"Скачивалка: {url}", flush=True)
+    threading.Thread(target=auto_update, daemon=True).start()
     if "--no-open" in sys.argv:
         srv.serve_forever()
     threading.Thread(target=srv.serve_forever, daemon=True).start()
