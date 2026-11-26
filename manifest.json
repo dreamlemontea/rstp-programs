@@ -1,0 +1,48 @@
+{
+ "version": "1.1",
+ "tag": "v1.1",
+ "notes": "Первая версия: новые значки, «Скачивалка» без YT, обновление из программы",
+ "pip": [
+  {
+   "import": "PIL",
+   "pkg": "pillow"
+  },
+  {
+   "import": "numpy",
+   "pkg": "numpy"
+  },
+  {
+   "import": "spandrel",
+   "pkg": "spandrel"
+  },
+  {
+   "import": "packaging",
+   "pkg": "packaging"
+  },
+  {
+   "import": "webview",
+   "pkg": "pywebview"
+  }
+ ],
+ "files": {
+  "Скачивалка/index.html": "3e56a64e62d60a04eb787a713c021ac3517c01ce8429aaff30f9c3f7f540be37",
+  "Скачивалка/server.py": "33065258aa0935739621e3112349901778a26b6200f8230544216faed6b2d3c1",
+  "Скачивалка/updater.py": "4688dd736aa31d3e765c7122388c21e27134cbf9ad7511fcf914fd0c07a4b4f9",
+  "Скачивалка/значок/icon-256.png": "c35a74433ba4625c948ac20be3cda188ea3dd4d2427789d339b59e25955def12",
+  "Скачивалка/значок/icon.icns": "25224def0d425b5b373e9f7867042bff0c25b36d9ae6e390fddd5b877a582e99",
+  "Скачивалка/значок/icon.ico": "560e1a96c86e2d8ed3244ce3c6288e4a58b193fff7633e46420065f75721431b",
+  "Скачивалка/значок/rstp-logo-dark.png": "b9f8de5d4279c6effb0098f945d1377d72546b49c3f6f66495542527336a5b76",
+  "Скачивалка/значок/rstp-logo.png": "d6bf2eb71843b06bd52787793a4380ef41a8659bae2dba79a674dae7cb7e7693",
+  "Улучшалка/index.html": "153680ed2821a539288fec74c4c213c149bf62b2051564256ba6fbb4f201995d",
+  "Улучшалка/server.py": "f60ae415486936214a38ff91ba7f5d5060f40e50224b0285f1d358ac3defc064",
+  "Улучшалка/updater.py": "4688dd736aa31d3e765c7122388c21e27134cbf9ad7511fcf914fd0c07a4b4f9",
+  "Улучшалка/значок/icon-256.png": "446bcd4c6e4fcaa851538e199d7916d3722b9c24b4f6753f434cace13f8d314e",
+  "Улучшалка/значок/icon.icns": "e6dcb0b9ec99649df508a693fc3e3fae464ce16754834bb3f3aa471d18de9d55",
+  "Улучшалка/значок/icon.ico": "63a445dbaebdcdc6e8f9d77e006a9432cab595c969388573dd2dee7dd7b7bab4",
+  "Улучшалка/значок/rstp-logo-dark.png": "b9f8de5d4279c6effb0098f945d1377d72546b49c3f6f66495542527336a5b76",
+  "Улучшалка/значок/rstp-logo.png": "d6bf2eb71843b06bd52787793a4380ef41a8659bae2dba79a674dae7cb7e7693",
+  "Улучшалка/модели/Nomos8kSC.safetensors": "9e158a603ceb1a21de7159cbdf32c402d1d68d03397f3d6d473d0152fc12122c",
+  "Улучшалка/модели/RealESRGAN_x4plus.pth": "4fa0d38905f75ac06eb49a7951b426670021be3018265fd191d2125df9d682f1",
+  "Улучшалка/модели/RealESRGAN_x4plus_anime_6B.pth": "f872d837d3c90ed2e05227bed711af5671a6fd1c9f7d7e91c911a61f155e99da"
+ }
+}
