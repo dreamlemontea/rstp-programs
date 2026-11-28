@@ -67,6 +67,17 @@ h2{margin:0;font-size:15px;font-weight:700}
 .cta.second{background:var(--field);border:1px solid var(--line);color:var(--text);font-weight:600;font-size:14px;padding:12px;margin-top:0}
 .cta svg{width:18px;height:18px}
 .note{color:var(--muted);font-size:12px;text-align:center;margin:0}
+/* ⓘ: hover (or click) shows the help */
+.info{position:relative;display:flex;justify-content:center;margin-top:6px}
+.info>button{display:inline-flex;align-items:center;gap:6px;border:0;background:none;color:var(--muted);font:inherit;font-size:12px;cursor:pointer;padding:4px 8px;border-radius:999px}
+.info>button:hover,.info:focus-within>button{color:var(--text)}
+.info>button i{font-style:normal;display:inline-grid;place-items:center;width:16px;height:16px;border-radius:50%;border:1.5px solid currentColor;font-size:11px;font-weight:700}
+.info .pop{display:none;position:absolute;top:calc(100% + 4px);left:50%;transform:translateX(-50%);width:300px;max-width:90vw;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;box-shadow:0 8px 24px #0005;color:var(--text);font-size:13px;line-height:1.45;text-align:left;z-index:20}
+.info:hover .pop,.info:focus-within .pop{display:block}.info .pop p{margin:0}.info .pop p+p{margin-top:6px}
+/* right click on the link field */
+.cm{position:fixed;z-index:50;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:4px;box-shadow:0 8px 24px #0005}
+.cm button{display:block;border:0;background:none;color:var(--text);font:inherit;font-size:14px;padding:7px 14px;border-radius:7px;cursor:pointer;text-align:left;min-width:120px}
+.cm button:hover{background:var(--field)}
 .upd{margin-left:auto;align-self:center;display:inline-flex;align-items:center;gap:6px;position:relative;background:none;border:1px solid var(--line);border-radius:999px;height:26px;padding:0 11px 0 9px;color:var(--muted);font-size:13px;font-weight:600;cursor:pointer}
 .upd:hover{color:var(--text)}
 .upd svg{width:14px;height:14px}
@@ -134,7 +145,7 @@ h2{margin:0;font-size:15px;font-weight:700}
 <div class="page">
 <header>
  <div class="logo"><span class="acc">с</span>качивалка<span class="acc">.</span></div>
- <div class="tag">видео и звук с YT, ВК и других сайтов</div>
+ <div class="tag">скачивает видео с YouTube, ВК и других сайтов</div>
  <a class="rstp" id="rstp" title="rstpstudio.ru">by<img class="lg-d" src="/rstp-logo.png" alt="RSTP Studio"><img class="lg-l" src="/rstp-logo-dark.png" alt="RSTP Studio"></a>
  <button class="upd" id="upd"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.3-5.6M20 4v4h-4"/></svg><span id="updt">Обновить</span><i class="dot"></i></button>
  <button class="theme" id="gear" title="Настройки"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
@@ -151,9 +162,9 @@ h2{margin:0;font-size:15px;font-weight:700}
    <div class="modes small q" id="q"><button data-v="0" class="on">Макс.</button><button data-v="1080">1080p</button><button data-v="720">720p</button></div>
    <div class="modes small" id="fmt" hidden><button data-v="wav" class="on">WAV</button><button data-v="mp3">MP3</button></div>
    <p class="hint center" id="hint"></p>
-   <div class="cut" id="cut"><i class="sw"></i>Только кусок по времени</div>
+   <div class="cut" id="cut"><i class="sw"></i><span id="cutt">Обрезать видео</span></div>
    <div class="times" id="times" hidden><input class="inp" id="t1" placeholder="с 0:00" inputmode="numeric"><span>—</span><input class="inp" id="t2" placeholder="до конца" inputmode="numeric"></div>
-   <p class="hint center" id="thint" hidden>Пиши цифры подряд — двоеточия встанут сами. Колёсико или стрелки ↑↓ — по секунде, с Shift — по 10.</p>
+   <div class="info" id="thint" hidden><button type="button"><i>i</i>Формат времени</button><div class="pop"><p>Формат: ЧЧ:ММ:СС</p><p>Можно вписать цифрами или крутить колёсико мыши / стрелки ↑↓: по 1 с, с Shift — по 10 с.</p></div></div>
    <button class="cta" id="go" disabled>Скачать</button>
   </div>
   <button class="cta second" id="openf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Открыть папку с результатами</button>
@@ -187,7 +198,7 @@ $('rstp').onclick=()=>fetch('/site').catch(()=>{});
 $('theme').onclick=()=>setTheme(theme==='dark'?'light':'dark',true);setTheme(theme);
 const val=id=>$(id).querySelector('.on').dataset.v;
 const QN={2160:'4K',1440:'2K'},qn=h=>QN[h]||h+'p';
-const hint=()=>{$('fmt').hidden=val('mode')!=='audio';$('q').hidden=val('mode')!=='video';const q=+val('q');
+const hint=()=>{$('fmt').hidden=val('mode')!=='audio';$('cutt').textContent=val('mode')==='audio'?'Обрезать аудио':'Обрезать видео';$('q').hidden=val('mode')!=='video';const q=+val('q');
  $('hint').textContent='';goText()};
 /* the button shows the rough file size: «Скачать (≈ 310 МБ)» */
 function goText(){let b=0;const z=info&&info.sizes;
@@ -233,8 +244,12 @@ async function lookup(){const u=$('url').value.trim();$('go').disabled=!isUrl(u)
   if(r.thumb)$('pimg').src=r.thumb;if(r.duration)$('t2').placeholder='до '+dur(r.duration);qualities(r.heights)}catch(e){if(u===infoFor)$('prev').hidden=true}}
 $('url').oninput=()=>{clearTimeout(lookup.t);lookup.t=setTimeout(lookup,400)};
 $('url').onkeydown=e=>{if(e.key==='Enter'&&!$('go').disabled)$('go').click()};
-const fromClip=async force=>{try{const r=await(await fetch('/paste')).json();if(r.text&&(force||!$('url').value.trim())&&r.text!==fromClip.last){fromClip.last=r.text;$('url').value=r.text;lookup()}else if(force&&!r.text)flash('В буфере нет ссылки. Скопируй ссылку на видео')}catch(e){}};
+const fromClip=async force=>{try{const r=await(await fetch('/paste')).json();if(r.text&&r.text!==fromClip.last&&(force||r.text!==$('url').value.trim())){fromClip.last=r.text;$('url').value=r.text;lookup()}else if(force&&!r.text)flash('В буфере нет ссылки. Скопируй ссылку на видео')}catch(e){}};
 $('paste').onclick=()=>{fromClip.last='';fromClip(true)};
+{const m=document.createElement('div');m.className='cm';m.hidden=true;m.innerHTML='<button>Вставить</button>';document.body.append(m);
+ $('url').oncontextmenu=e=>{e.preventDefault();m.hidden=false;m.style.left=Math.min(e.clientX,innerWidth-m.offsetWidth-8)+'px';m.style.top=Math.min(e.clientY,innerHeight-m.offsetHeight-8)+'px'};
+ m.firstChild.onclick=()=>{m.hidden=true;$('paste').click()};
+ const off=()=>m.hidden=true;addEventListener('mousedown',e=>{if(!m.contains(e.target))off()});addEventListener('blur',off);addEventListener('keydown',e=>{if(e.key==='Escape')off()});addEventListener('scroll',off,true)}
 let auto=true;try{auto=localStorage.getItem('autopaste')!=='0'}catch(e){}
 $('auto').checked=auto;
 $('auto').onchange=()=>{auto=$('auto').checked;try{localStorage.setItem('autopaste',auto?'1':'0')}catch(e){};if(auto)fromClip(false)};

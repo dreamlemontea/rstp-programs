@@ -1,6 +1,6 @@
 # Local image improver for one computer: a page on localhost, the neural nets run on this computer
 # (Mac: processor, 4 threads; Windows with an NVIDIA card: the card), nothing is sent anywhere. Models: Real-ESRGAN anime 6B (BSD-3), x4plus (BSD-3), 4xNomos8kSC (CC BY 4.0, Philip Hofmann).
-import io, json, os, re, shutil, subprocess, sys, threading, time, urllib.parse, uuid, webbrowser
+import io, json, os, traceback, re, shutil, subprocess, sys, threading, time, urllib.parse, uuid, webbrowser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 import numpy as np
@@ -14,7 +14,23 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 SITE = "https://rstpstudio.ru"  # the RSTP Studio logo in the window opens it
 WIN = sys.platform == "win32"
 if sys.stdout is None:  # Windows, started without a console (pythonw): the messages go to a file
-    sys.stdout = sys.stderr = open(os.path.join(HERE, "log.txt"), "w", encoding="utf-8", buffering=1)
+    # kept between starts (the journal of errors), the old half dropped past 1 MB
+    _lg = os.path.join(HERE, "log.txt")
+    try:
+        if os.path.getsize(_lg) > 1_000_000:
+            with open(_lg, encoding="utf-8", errors="replace") as _f:
+                _t = _f.read()[-500_000:]
+            with open(_lg, "w", encoding="utf-8") as _f:
+                _f.write(_t)
+    except OSError:
+        pass
+    sys.stdout = sys.stderr = open(_lg, "a", encoding="utf-8", buffering=1)
+    print(f"\n===== запуск {time.strftime('%d.%m.%Y %H:%M')} =====", flush=True)
+def err_log(what):
+    """The journal of errors: when, what was asked, and the full error."""
+    print(f"--- ошибка {time.strftime('%d.%m %H:%M:%S')} · {what}\n{traceback.format_exc()}", flush=True)
+
+
 OUT = os.path.expanduser("~/Downloads")
 # the variants being tried live here until «Сохранить»; whatever is left is wiped on start and on close
 TMP = os.path.join(HERE, "варианты")
@@ -395,6 +411,7 @@ class H(BaseHTTPRequestHandler):
                     return self.end_headers()
                 return self.send(png, "image/png")
             except Exception as e:  # noqa: BLE001
+                err_log(self.path)
                 self.send_response(500)
                 self.end_headers()
                 return self.wfile.write(str(e).encode())
@@ -408,6 +425,7 @@ class H(BaseHTTPRequestHandler):
                 open(os.path.join(TMP, name), "wb").write(data)
                 return self.send(json.dumps({"id": name}).encode(), "application/json")
             except Exception as e:  # noqa: BLE001
+                err_log(self.path)
                 self.send_response(500)
                 self.end_headers()
                 return self.wfile.write(str(e).encode())
@@ -442,6 +460,7 @@ class H(BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(png)
         except Exception as e:  # noqa: BLE001
+            err_log(self.path)
             self.send_response(500)
             self.end_headers()
             self.wfile.write(str(e).encode())

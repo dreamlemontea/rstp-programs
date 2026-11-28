@@ -9,7 +9,18 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 SITE = "https://rstpstudio.ru"  # "by RSTP Studio" in the window opens it
 WIN = sys.platform == "win32"
 if sys.stdout is None:  # Windows, started without a console (pythonw): the messages go to a file
-    sys.stdout = sys.stderr = open(os.path.join(HERE, "log.txt"), "w", encoding="utf-8", buffering=1)
+    # kept between starts (the journal of errors), the old half dropped past 1 MB
+    _lg = os.path.join(HERE, "log.txt")
+    try:
+        if os.path.getsize(_lg) > 1_000_000:
+            with open(_lg, encoding="utf-8", errors="replace") as _f:
+                _t = _f.read()[-500_000:]
+            with open(_lg, "w", encoding="utf-8") as _f:
+                _f.write(_t)
+    except OSError:
+        pass
+    sys.stdout = sys.stderr = open(_lg, "a", encoding="utf-8", buffering=1)
+    print(f"\n===== запуск {time.strftime('%d.%m.%Y %H:%M')} =====", flush=True)
 NOWIN = {"creationflags": 0x08000000} if WIN else {}  # Windows: no black console windows for yt-dlp
 BIN = os.path.join(HERE, "bin")
 # the unpacked official build (yt-dlp_macos.zip / yt-dlp_win.zip) starts in a fraction of a second;
@@ -319,7 +330,7 @@ def run_job(j):
     for line in p.stdout:
         line = line.rstrip()
         log.append(line)
-        del log[:-60]
+        del log[:-80]
         if line.startswith("TITLE "):
             j["title"] = line[6:]
         elif line.startswith("FILE "):
@@ -347,7 +358,8 @@ def run_job(j):
     else:
         errs = "\n".join(l for l in log if "ERROR" in l) or "\n".join(log[-8:])
         j.update(state="err", error=nice(errs), log="\n".join(log[-20:]))
-        print("\n".join(log[-20:]), flush=True)
+        print(f"--- ошибка {time.strftime('%d.%m %H:%M:%S')} · {j['url']} · {j['mode']} {j.get('q') or j.get('fmt')}\n"
+              + "\n".join(log[-40:]), flush=True)
     j.pop("proc", None)
 
 
@@ -633,7 +645,12 @@ def window(url):
               "cocoa.menu.cut": "Вырезать", "cocoa.menu.copy": "Копировать", "cocoa.menu.paste": "Вставить",
               "cocoa.menu.selectAll": "Выбрать всё"}
         dark = dark_os()
-        w = webview.create_window("Скачивалка", url, width=1100, height=780, min_size=(480, 560), background_color="#0b0b0f" if dark else "#f4f1ec")
+        h = 860  # room for the link card, cutting and a long title: no scrolling; but not taller than the screen
+        try:
+            h = min(h, int(webview.screens[0].height) - 80)
+        except Exception:  # noqa: BLE001
+            pass
+        w = webview.create_window("Скачивалка", url, width=1100, height=max(h, 600), min_size=(480, 560), background_color="#0b0b0f" if dark else "#f4f1ec")
         global WINDOW
         WINDOW = w
         w.events.shown += lambda: shown.set()

@@ -57,7 +57,7 @@ main{flex:1;min-height:0;display:grid;grid-template-columns:330px minmax(0,1fr);
 .drop.small{padding:12px;display:flex;align-items:center;justify-content:center;gap:10px}
 .drop.small svg{width:20px;height:20px;margin:0}.drop.small b{display:inline;font-size:14px;margin:0}.drop.small .hint{display:none}
 /* switches, as on the site */
-.label{font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.6px;margin:16px 0 8px}
+.label{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.3px;margin:16px 0 8px;white-space:nowrap}
 .modes{display:flex;background:var(--field);border:1px solid var(--line);border-radius:999px;padding:4px}
 .modes button{flex:1;border:0;background:none;color:var(--muted);padding:10px 8px;border-radius:999px;font-weight:700;cursor:pointer;transition:background .15s,color .15s;white-space:nowrap}
 .modes button:hover{color:var(--text)}
@@ -72,6 +72,15 @@ main{flex:1;min-height:0;display:grid;grid-template-columns:330px minmax(0,1fr);
 .cta.second{background:var(--field);border:1px solid var(--line);color:var(--text);font-weight:600;font-size:14px;padding:12px;margin-top:0}
 .cta svg{width:18px;height:18px}
 .note{color:var(--muted);font-size:12px;text-align:center;margin:0}
+.dims{color:var(--muted);font-size:11px;opacity:.7;text-align:center;margin:6px 0 0;min-height:14px}
+/* ⓘ: hover (or click) shows the steps */
+.info{position:relative;display:flex;justify-content:flex-end}
+.info>button{display:inline-flex;align-items:center;gap:6px;border:0;background:none;color:var(--muted);font:inherit;font-size:12px;cursor:pointer;padding:4px 0 4px 8px;border-radius:999px}
+.info>button:hover,.info:focus-within>button{color:var(--text)}
+.info>button i{font-style:normal;display:inline-grid;place-items:center;width:16px;height:16px;border-radius:50%;border:1.5px solid currentColor;font-size:11px;font-weight:700}
+.info .pop{display:none;position:absolute;bottom:calc(100% + 6px);right:0;width:320px;max-width:90vw;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;box-shadow:0 8px 24px #0005;color:var(--text);font-size:13px;line-height:1.45;text-align:left;z-index:20}
+.info:hover .pop,.info:focus-within .pop{display:block}
+.info .pop ol{margin:0;padding-left:18px}.info .pop li+li{margin-top:6px}
 /* the picture */
 #view{flex:1;min-height:0;display:flex;flex-direction:column;gap:12px}
 .vt{display:flex;align-items:center;gap:10px;flex:none;min-height:34px}
@@ -177,7 +186,7 @@ main{flex:1;min-height:0;display:grid;grid-template-columns:330px minmax(0,1fr);
 <div class="page">
 <header>
  <div class="logo"><span class="acc">у</span>лучшалка<span class="acc">.</span></div>
- <div class="tag">делает изображения чётче с помощью нейросетей</div>
+ <div class="tag">повышает качество изображений с помощью нейросетей</div>
  <a class="rstp" id="rstp" title="rstpstudio.ru">by<img class="lg-d" src="/rstp-logo.png" alt="RSTP Studio"><img class="lg-l" src="/rstp-logo-dark.png" alt="RSTP Studio"></a>
  <button class="upd new" id="upd" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.3-5.6M20 4v4h-4"/></svg><span id="updt">Обновить</span><i class="dot"></i></button>
  <button class="theme" id="gear" title="Настройки"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
@@ -202,13 +211,18 @@ main{flex:1;min-height:0;display:grid;grid-template-columns:330px minmax(0,1fr);
    <div class="label">Что на изображении</div>
    <div class="modes" id="kind"><button data-v="anime" class="on">Рисунок, арт</button><button data-v="photo">Живое фото</button></div>
    <div class="modes small" id="look" hidden><button data-v="nomos" class="on">Резче</button><button data-v="x4plus">Мягче</button></div>
-   <div class="label">Во сколько раз больше</div>
+   <div class="label">Во сколько раз увеличить разрешение</div>
    <div class="modes" id="scale"><button data-v="2" class="on">В 2 раза</button><button data-v="4">В 4 раза</button></div>
-   <p class="hint center" id="hint"></p>
+   <p class="dims" id="dims"></p>
+   <p class="hint center" id="hint" style="font-size:12px"></p>
    <button class="cta" id="go" disabled>Улучшить</button>
   </div>
   <button class="cta second" id="openf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Открыть папку с результатами</button>
-  <p class="note">Переключай настройки — изображение улучшится заново в порядке очереди, прошлые варианты останутся. Понравилось — «Сохранить»: ляжет в выбранную папку (⚙ вверху).</p>
+  <div class="info"><button type="button">Как пользоваться<i>i</i></button><div class="pop"><ol>
+   <li>Выбери настройки и нажми «Улучшить».</li>
+   <li>Хочешь сравнить с другими настройками? Дождись окончания процесса, выбери новые настройки и снова нажми «Улучшить». Все варианты будут под изображением — между ними можно переключаться.</li>
+   <li>Если улучшать несколько изображений одновременно, они улучшаются в порядке очереди.</li>
+   <li>Выбери понравившийся вариант и нажми «Сохранить». Папку для сохранения можно изменить в настройках (⚙ вверху).</li></ol></div></div>
  </div>
  <div class="col">
   <div class="card" id="view">
@@ -280,14 +294,13 @@ const NAME={anime:'Рисунок',nomos:'Фото резче',x4plus:'Фото 
 const label=k=>{const[m,s,b='0']=k.split('|');return NAME[m]+' ×'+s+(b==='0'?'':' без фона'+(b.includes('.')?' ✎'+b.split('.')[1]:''))};
 const hint=()=>{$('look').hidden=val('kind')!=='photo';$('hint').textContent=val('kind')==='anime'?'Для рисунков, аниме и арта с чёткими линиями.':val('look')==='nomos'?'Больше мелких деталей и чёткости.':'Естественнее — для лиц и кожи.'};
 function useKey(k){const[m,s,b]=k.split('|');setv('kind',m==='anime'?'anime':'photo');if(m!=='anime')setv('look',m);setv('scale',s);$('nobg').checked=!!b&&b!=='0';$('tools').hidden=!$('nobg').checked;hint()}
-/* a setting changed: the picture on screen is made again that way (or the ready variant is shown) */
+/* a setting changed: if that variant is ready it is shown; otherwise «Улучшить» makes it */
 ['kind','look','scale'].forEach(id=>$(id).onclick=e=>{const b=e.target.closest('button');if(!b)return;setv(id,b.dataset.v);hint();
- /* clicked several settings in a row: only the last choice is made (a variant already being made is finished) */
- if(cur&&Object.keys(cur.vars).length){const k=key();queue=queue.filter(q=>q.it!==cur);if(cur.vars[k])cur.key=k;else enqueue(cur,k)}render()});
+ if(cur&&cur.vars[key()])cur.key=key();render()});
 hint();
 /* adding pictures: the zone, the button, or dropping anywhere on the window */
 const add=fs=>{const ok=[...fs].filter(f=>f.type.startsWith('image/')||/\.(png|jpe?g|webp|bmp|tiff?|gif|heic)$/i.test(f.name));
- ok.forEach(f=>items.push({f,url:URL.createObjectURL(f),st:'wait',vars:{},key:null}));
+ ok.forEach(f=>{const it={f,url:URL.createObjectURL(f),st:'wait',vars:{},key:null};items.push(it);const im=new Image();im.onload=()=>{it.nw=im.naturalWidth;it.nh=im.naturalHeight;render();if(it===cur)fit()};im.src=it.url});
  if(fs.length&&!ok.length)flash('Это не изображения. Подойдут PNG, JPG, WEBP.');
  if(ok.length&&(!cur||!Object.keys(cur.vars).length))cur=items[items.length-ok.length];render()};
 const flash=t=>{$('hint').textContent=t;$('hint').style.color='var(--accent)';clearTimeout(flash.t);flash.t=setTimeout(()=>{$('hint').style.color='';hint()},3500)};
@@ -358,6 +371,7 @@ function render(){
  if(cur&&$('nobg').checked&&!cur.mask&&!cur.maskBusy&&!cur.maskErr)loadMask(cur);
  $('go').textContent=fresh>1?`Улучшить ${fresh} ${fresh%10>=2&&fresh%10<=4&&(fresh%100<10||fresh%100>=20)?'изображения':'изображений'}`:'Улучшить';
  if(cur&&!items.includes(cur))cur=null;
+ {const k=+val('scale');$('dims').textContent=cur&&cur.nw?`${cur.nw}×${cur.nh} → ${cur.nw*k}×${cur.nh*k}`:''}
  $('empty').hidden=!!cur;$('vt').hidden=$('stage').hidden=!cur;
  if(cur){
   $('vn').textContent=cur.f.name;[...$('mode').children].forEach(x=>x.classList.toggle('on',x.dataset.v===mode));
@@ -407,7 +421,7 @@ function stripBar(it){if(it.pbEl)it.pbEl.style.width=(it.job&&it.job.pct||0)+'%'
 /* «Убрать фон»: the net makes the mask at once; it is kept as a canvas whose alpha is the mask.
    While fixing (it.editing) the removed part stays faintly visible, tinted red; «Применить» shows it clean */
 $('nobg').onchange=()=>{const on=$('nobg').checked;$('tools').hidden=!on;
- if(!on&&cur&&Object.keys(cur.vars).length){const k=key();queue=queue.filter(q=>q.it!==cur);if(cur.vars[k])cur.key=k;else enqueue(cur,k)}render()};
+ if(!on&&cur&&cur.vars[key()])cur.key=key();render()};
 const toAlpha=bm=>{const c=document.createElement('canvas');c.width=bm.width;c.height=bm.height;const x=c.getContext('2d');x.drawImage(bm,0,0);
  const d=x.getImageData(0,0,c.width,c.height),p=d.data;for(let i=0;i<p.length;i+=4){p[i+3]=p[i];p[i]=p[i+1]=p[i+2]=255}x.putImageData(d,0,0);return c};
 async function loadMask(it){it.maskBusy=true;

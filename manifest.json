@@ -1,7 +1,7 @@
 {
- "version": "1.0.4",
- "tag": "v1.0.4",
- "notes": "Перезапуск после обновления и окошко «Что нового»",
+ "version": "1.0.5",
+ "tag": "v1.0.5",
+ "notes": "Новые подсказки ⓘ, Улучшалка не запускается сама при смене настроек, Скачивалка: ссылка из буфера и правая кнопка, журнал ошибок",
  "pip": [
   {
    "import": "PIL",
@@ -29,18 +29,18 @@
   }
  ],
  "files": {
-  "Скачивалка/changes.json": "c7f77337fd2991327ccec63096d3c241626445de10d17ac3868fcde34faf677e",
-  "Скачивалка/index.html": "0c4e6a166fda3494820d40f546f6e9b00280ca37a882ff153c2483a96cd62892",
-  "Скачивалка/server.py": "025a8b31f5be84b4743e34f9782ed199b6fb8452389723d154dee04da1421e3d",
+  "Скачивалка/changes.json": "dce82c507d2f5aabeb1ca6470ab82cdcf7224d991cef1fd0dd7f9b13b049f068",
+  "Скачивалка/index.html": "eee2c52564ed618e31b8d28bc712e9c39a5fa6fb584b0b14d3d9802a3c16f474",
+  "Скачивалка/server.py": "ae723fdb2bb2697d265a0859e3b8122bd9fe7ee549bccf4f561a91cfd353af90",
   "Скачивалка/updater.py": "0996ef3211318808a74c8a29602994df9c32d1612c6a85467d8d740297050649",
   "Скачивалка/значок/icon-256.png": "c35a74433ba4625c948ac20be3cda188ea3dd4d2427789d339b59e25955def12",
   "Скачивалка/значок/icon.icns": "25224def0d425b5b373e9f7867042bff0c25b36d9ae6e390fddd5b877a582e99",
   "Скачивалка/значок/icon.ico": "560e1a96c86e2d8ed3244ce3c6288e4a58b193fff7633e46420065f75721431b",
   "Скачивалка/значок/rstp-logo-dark.png": "b9f8de5d4279c6effb0098f945d1377d72546b49c3f6f66495542527336a5b76",
   "Скачивалка/значок/rstp-logo.png": "d6bf2eb71843b06bd52787793a4380ef41a8659bae2dba79a674dae7cb7e7693",
-  "Улучшалка/changes.json": "c7f77337fd2991327ccec63096d3c241626445de10d17ac3868fcde34faf677e",
-  "Улучшалка/index.html": "7c88b68bb4ee96f06255b3c88f7b55b056ddd5601ba8080542a3eb036a41f906",
-  "Улучшалка/server.py": "2b2ebd3f41d3fd934906f5f848997f8e0f90fd86cacbb3c10e18397d2dd3d94b",
+  "Улучшалка/changes.json": "dce82c507d2f5aabeb1ca6470ab82cdcf7224d991cef1fd0dd7f9b13b049f068",
+  "Улучшалка/index.html": "707ad317f801b04b5c8f0979a16e247a8899ec8186435cfa8d55184ba0c0d159",
+  "Улучшалка/server.py": "62882af2e007e66adfb21fa6898cafb2bc5a967302d7d340b6e429147ad239bd",
   "Улучшалка/updater.py": "0996ef3211318808a74c8a29602994df9c32d1612c6a85467d8d740297050649",
   "Улучшалка/значок/icon-256.png": "446bcd4c6e4fcaa851538e199d7916d3722b9c24b4f6753f434cace13f8d314e",
   "Улучшалка/значок/icon.icns": "e6dcb0b9ec99649df508a693fc3e3fae464ce16754834bb3f3aa471d18de9d55",
